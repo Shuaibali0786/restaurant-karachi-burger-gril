@@ -208,3 +208,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- 001-restaurant-frontend: TypeScript (strict) · Next.js 16.3 App Router (Turbopack) · React 19.3 · Tailwind CSS 4.3 (`@theme` tokens) · motion 13 (Framer Motion) · Zustand 5 persist (localStorage) · React Hook Form 7 + Zod 4 · lucide-react 1.x (no brand icons) · Vitest 5 · Playwright 1.63
+- Frontend lives in `frontend/`; components read data only via `frontend/src/lib/api.ts`
+
+## Recent Changes
+- 001-restaurant-frontend: plan, research, data model and contracts in `specs/001-restaurant-frontend/`

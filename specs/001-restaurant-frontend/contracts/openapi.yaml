@@ -1,0 +1,258 @@
+openapi: 3.1.0
+info:
+  title: Karachi Burger & Grill API
+  version: 0.1.0-draft
+  description: >
+    Target contract for the Phase 2 FastAPI backend. The Phase 1 frontend implements the same
+    shapes in src/lib/api.ts with mock data. Money is integer PKR. Draft — finalised in Phase 2.
+servers:
+  - url: /api/v1
+paths:
+  /categories:
+    get:
+      summary: List menu categories with option groups and add-ons
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Category' } }
+  /menu-items:
+    get:
+      summary: List menu items
+      parameters:
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/CategorySlug' } }
+        - { name: search, in: query, schema: { type: string, maxLength: 60 } }
+        - { name: sort, in: query, schema: { type: string, enum: [popular, price-asc, price-desc], default: popular } }
+        - { name: featured, in: query, schema: { type: string, enum: [most-loved, chef-special] } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/MenuItemView' } }
+  /menu-items/{slug}:
+    get:
+      summary: Get one menu item
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MenuItemView' }
+        '404': { $ref: '#/components/responses/Error' }
+  /promos:
+    get:
+      summary: Active promotions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Promo' } }
+  /testimonials:
+    get:
+      summary: Testimonials (isSample=true until real reviews exist)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Testimonial' } }
+  /delivery-areas:
+    get:
+      summary: Supported delivery areas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [id, name]
+                  properties:
+                    id: { $ref: '#/components/schemas/DeliveryArea' }
+                    name: { type: string }
+  /orders:
+    post:
+      summary: Place a Cash-on-Delivery order (server recomputes all prices)
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlaceOrderInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /orders/{id}:
+    get:
+      summary: Get an order and its current status
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, pattern: '^KBG-\d{6}$' } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Order' }
+        '404': { $ref: '#/components/responses/Error' }
+components:
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, message]
+            properties:
+              code:
+                type: string
+                enum: [NOT_FOUND, VALIDATION_FAILED, EMPTY_CART, UNKNOWN_ITEM, INVALID_OPTION, DUPLICATE_REQUEST]
+              message: { type: string }
+              issues: { type: array, items: { type: object } }
+  schemas:
+    CategorySlug:
+      type: string
+      enum: [burgers, wraps, fried-chicken, sandwiches, bbq, bowls, sides-drinks, combos]
+    DeliveryArea:
+      type: string
+      enum: [saddar, clifton, dha, pechs, gulshan, north-nazimabad]
+    Option:
+      type: object
+      required: [id, label, priceDelta]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        priceDelta: { type: integer, minimum: 0 }
+    Addon:
+      type: object
+      required: [id, label, price]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        price: { type: integer, minimum: 1 }
+    Category:
+      type: object
+      required: [id, name, image, imageAlt, order, options, addons]
+      properties:
+        id: { $ref: '#/components/schemas/CategorySlug' }
+        name: { type: string }
+        image: { type: string }
+        imageAlt: { type: string }
+        order: { type: integer }
+        options: { type: array, items: { $ref: '#/components/schemas/Option' } }
+        addons: { type: array, items: { $ref: '#/components/schemas/Addon' } }
+    MenuItemView:
+      type: object
+      required: [slug, name, category, basePrice, image, imageAlt, description, rating, popularity, options, addons]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        category: { $ref: '#/components/schemas/CategorySlug' }
+        basePrice: { type: integer, minimum: 1 }
+        image: { type: string }
+        imageAlt: { type: string }
+        description: { type: string, maxLength: 120 }
+        tag: { type: [string, 'null'], enum: [bestseller, hot, new, veg, null] }
+        rating: { type: number, minimum: 0, maximum: 5 }
+        popularity: { type: integer }
+        featured: { type: array, items: { type: string, enum: [most-loved, chef-special] } }
+        options: { type: array, items: { $ref: '#/components/schemas/Option' } }
+        addons: { type: array, items: { $ref: '#/components/schemas/Addon' } }
+    Promo:
+      type: object
+      required: [id, title, kind, itemSlug]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        kind: { type: string, enum: [price, weekday-percent] }
+        itemSlug: { type: string }
+        price: { type: integer }
+        wasPrice: { type: integer }
+        weekday: { type: integer, minimum: 0, maximum: 6 }
+        percent: { type: integer, minimum: 1, maximum: 100 }
+        image: { type: string }
+    Testimonial:
+      type: object
+      required: [id, name, area, quote, rating, isSample]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        area: { type: string }
+        quote: { type: string, maxLength: 180 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        isSample: { type: boolean }
+    PlaceOrderInput:
+      type: object
+      required: [customer, delivery, payment, lines]
+      properties:
+        customer:
+          type: object
+          required: [name, phone]
+          properties:
+            name: { type: string, minLength: 2, maxLength: 60 }
+            phone: { type: string, pattern: '^(?:\+92|0092|0)3\d{9}$' }
+        delivery:
+          type: object
+          required: [area, address]
+          properties:
+            area: { $ref: '#/components/schemas/DeliveryArea' }
+            address: { type: string, minLength: 10, maxLength: 200 }
+            notes: { type: string, maxLength: 200 }
+        payment: { type: string, enum: [cod] }
+        lines:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [itemSlug, optionId, addonIds, quantity]
+            properties:
+              itemSlug: { type: string }
+              optionId: { type: string }
+              addonIds: { type: array, items: { type: string } }
+              note: { type: string, maxLength: 500 }
+              quantity: { type: integer, minimum: 1, maximum: 20 }
+    OrderLine:
+      type: object
+      required: [itemSlug, name, optionLabel, addonLabels, quantity, unitPrice, lineTotal]
+      properties:
+        itemSlug: { type: string }
+        name: { type: string }
+        optionLabel: { type: string }
+        addonLabels: { type: array, items: { type: string } }
+        note: { type: string }
+        quantity: { type: integer }
+        unitPrice: { type: integer }
+        discount: { type: integer }
+        lineTotal: { type: integer }
+    Order:
+      type: object
+      required: [id, customer, delivery, payment, lines, totals, placedAt, status]
+      properties:
+        id: { type: string, pattern: '^KBG-\d{6}$' }
+        customer: { $ref: '#/components/schemas/PlaceOrderInput/properties/customer' }
+        delivery: { $ref: '#/components/schemas/PlaceOrderInput/properties/delivery' }
+        payment: { type: string, enum: [cod] }
+        lines: { type: array, items: { $ref: '#/components/schemas/OrderLine' } }
+        totals:
+          type: object
+          required: [subtotal, discount, delivery, total]
+          properties:
+            subtotal: { type: integer }
+            discount: { type: integer }
+            delivery: { type: integer }
+            total: { type: integer }
+        placedAt: { type: string, format: date-time }
+        status: { type: string, enum: [confirmed, preparing, on-the-way, delivered] }
