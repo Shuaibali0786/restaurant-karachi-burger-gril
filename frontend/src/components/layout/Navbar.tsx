@@ -7,6 +7,8 @@ import { Menu, Search, ShoppingBag, UserRound } from "lucide-react";
 import type { NavLink } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { useScrolled } from "@/hooks/useScrolled";
+import { selectCartCount, useCart } from "@/stores/cart";
+import { useHydrated } from "@/stores/hydration";
 import { ButtonLink } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 import { MobileMenu } from "@/components/layout/MobileMenu";
@@ -29,8 +31,10 @@ export function Navbar({ links, hours }: NavbarProps) {
 
   const isHome = pathname === "/";
   const solid = scrolled || !isHome;
-  // Phase 4 wires this to the cart store; the bubble only renders when > 0.
-  const cartCount = 0;
+  const hydrated = useHydrated();
+  const storedCount = useCart(selectCartCount);
+  // The bubble only renders once the saved cart has loaded and is non-empty.
+  const cartCount = hydrated ? storedCount : 0;
 
   const isActive = useCallback(
     (href: string) => {

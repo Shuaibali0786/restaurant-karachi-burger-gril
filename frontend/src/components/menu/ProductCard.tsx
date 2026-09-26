@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Plus } from "lucide-react";
 import type { MenuItemView } from "@/lib/types";
 import { cn } from "@/lib/cn";
-import { useUi } from "@/stores/ui";
+import { openItem } from "@/stores/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Price } from "@/components/ui/Price";
 import { FavouriteButton } from "@/components/menu/FavouriteButton";
@@ -19,7 +19,6 @@ interface ProductCardProps {
  * never adds straight to the cart (Constitution III).
  */
 export function ProductCard({ item, className }: ProductCardProps) {
-  const openItem = useUi((state) => state.openItem);
   const open = () => openItem(item.slug);
   const hasPaidOptions = item.options.some((option) => option.priceDelta > 0);
 

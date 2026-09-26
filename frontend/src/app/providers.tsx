@@ -2,13 +2,14 @@
 
 import { MotionConfig } from "motion/react";
 import { useEffect, type ReactNode } from "react";
+import { useCart } from "@/stores/cart";
 import { useFavourites } from "@/stores/favourites";
 import { markStoresHydrated } from "@/stores/hydration";
 
 /** Loads persisted stores after mount so server and client HTML match. */
 function StoreHydrator() {
   useEffect(() => {
-    void Promise.resolve(useFavourites.persist.rehydrate()).then(markStoresHydrated);
+    void Promise.all([useFavourites.persist.rehydrate(), useCart.persist.rehydrate()]).then(markStoresHydrated);
   }, []);
   return null;
 }

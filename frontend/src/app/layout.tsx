@@ -1,15 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import "./globals.css";
 import { fontVariables } from "./fonts";
 import { Providers } from "./providers";
-import { getSiteInfo } from "@/lib/api";
+import { getMenuItems, getSiteInfo } from "@/lib/api";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { SkipLink } from "@/components/layout/SkipLink";
+import { ItemModal } from "@/components/menu/ItemModal";
+import { Toaster } from "@/components/ui/Toaster";
 
 export const metadata: Metadata = {
+  // Absolute base for Open Graph image URLs; set NEXT_PUBLIC_SITE_URL when deploying.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: "Karachi Burger & Grill · Karachi ka asli zaiqa",
     template: "%s · Karachi Burger & Grill",
@@ -23,7 +27,7 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const site = await getSiteInfo();
+  const [site, items] = await Promise.all([getSiteInfo(), getMenuItems()]);
 
   return (
     <html lang="en" className={fontVariables}>
@@ -36,6 +40,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             {children}
           </main>
           <Footer site={site} />
+          {/* Reads ?item= from the URL, so it must sit inside Suspense for static pages. */}
+          <Suspense fallback={null}>
+            <ItemModal items={items} />
+          </Suspense>
+          <Toaster />
         </Providers>
       </body>
     </html>
