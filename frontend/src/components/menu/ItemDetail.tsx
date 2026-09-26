@@ -187,7 +187,10 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
                   >
                     <span className="size-2 rounded-full bg-white opacity-0" />
                   </span>
-                  <span className="flex-1 font-bold text-ink-900">{option.label}</span>
+                  <span className="flex-1">
+                    <span className="block font-bold text-ink-900">{option.label}</span>
+                    {option.includes && <span className="block text-sm text-ink-600">Includes {option.includes}</span>}
+                  </span>
                   <span className="text-sm font-semibold text-ink-600">
                     {option.priceDelta > 0 ? `+ ${formatRs(option.priceDelta)}` : "Included"}
                   </span>

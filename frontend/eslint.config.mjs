@@ -5,6 +5,12 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // `_name` marks an intentionally unused parameter (e.g. UI-only API stubs awaiting the backend).
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    },
+  },
   // Constitution IX: screens and components read data only through `@/lib/api`.
   {
     files: ["src/**/*.{ts,tsx}"],

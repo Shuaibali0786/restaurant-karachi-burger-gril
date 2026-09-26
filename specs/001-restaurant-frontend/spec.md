@@ -218,7 +218,7 @@ created).
   "Free delivery on orders over Rs 1,500 · Open daily 12 noon – 3 AM".
 - **FR-002**: Every page MUST show a sticky navbar with: logo (flame/coal mark, "KARACHI" large,
   "BURGER & GRILL" beneath) linking to Home; links Home, Menu, Combos (menu filtered to Combo),
-  About, Contact; a search control; a login icon; a cart icon with total item count; and an
+  About, Contact (Combos opens a `/combos` page: Grand Combo, current deals and meal upgrades); a search control; a login icon; a cart icon with total item count; and an
   "Order Now" button to the menu. The navbar MUST be transparent over the hero and become solid
   once the page is scrolled.
 - **FR-003**: On narrow screens the nav links MUST collapse into a hamburger menu that opens a
@@ -226,8 +226,8 @@ created).
 - **FR-004**: Every page MUST show the footer with logo and tagline, quick links, support links
   (FAQ, Track Order, Privacy, Terms), contact block (Burns Road, Saddar, Karachi; hours; phone and
   email), newsletter signup (validates email, shows success message, sends nothing), and social
-  icons with accessible names. Support links without pages in this phase MUST lead to a simple
-  "coming soon" state rather than a broken link.
+  icons with accessible names. Support links open real FAQ, Track Order, Privacy and Terms pages
+  (owner request 2026-09-26).
 - **FR-005**: All prices MUST display in the format `Rs 1,190`.
 
 **Home page**
@@ -310,8 +310,9 @@ created).
 **Other pages**
 
 - **FR-050**: Favourites page lists hearted items (persisted on device) with empty state.
-- **FR-051**: Login and Signup pages provide validated forms (email, password ≥ 8 chars; signup
-  adds name, phone, confirm password) and show a "coming soon — order as guest" notice on valid
+- **FR-051**: Login and Signup pages provide validated forms (login: email or Pakistani mobile +
+  password ≥ 8 chars with show/hide; signup adds name, email, phone, confirm password; a disabled
+  "Continue with Google — Coming soon" option, text only) and show a "coming soon — order as guest" notice on valid
   submit. No account is created and no credentials are stored.
 - **FR-052**: About page tells the brand story (Burns Road origins, grill craft, halal
   ingredients) using the about photos.
@@ -342,6 +343,9 @@ Option groups (required, choose one) and add-ons (optional, choose any) per cate
 | Bowls | Regular (+0) / Large (+200) | Extra chicken 250, Avocado 200 |
 | Sides & Drinks | Regular (+0) / Large (+120) | none |
 | Combos | Regular (+0, only option) | none |
+
+Every **Meal** option includes **Masala Fries + Chilled Cola**, shown under the option in the item view,
+in the cart, at checkout and on the order (owner decision 2026-09-26).
 
 Fried Chicken and BBQ size pricing (Double = +90% of base, Family Pack = +220% of base, rounded
 to the nearest Rs 10; owner decision 2026-09-26):
@@ -494,6 +498,7 @@ the backend (owner decision 2026-09-26); stars appear only on the labelled sampl
   day** — replaced with "Made fresh, every order" and "Loved across Karachi" (no fake numbers).
 - Q: Show illustrative star ratings on food cards? → A: No — hidden until real backend ratings;
   stars only on sample reviews. Hero doodle changed to "Hot off the grill!".
+- Q: What does a Meal upgrade include? → A: Masala Fries + Chilled Cola, shown everywhere the option appears.
 - Q: Should most cards say Bestseller? → A: No — at most 3 Bestseller items; others use Hot, New,
   Chef's Pick or Veg. Tags revised: Double Trouble Cheese → Hot; Grill Mix Platter, Tikka Rice Bowl,
   Grand Combo → Chef's Pick; Mint Margarita → Veg.

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useId, useState } from "react";
-import { Menu, Search, UserRound } from "lucide-react";
+import { Heart, Menu, Search, UserRound } from "lucide-react";
 import type { NavLink } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { useScrolled } from "@/hooks/useScrolled";
@@ -33,9 +33,7 @@ export function Navbar({ links, hours }: NavbarProps) {
 
   const isActive = useCallback(
     (href: string) => {
-      const path = href.split("?")[0] ?? href;
-      if (href.includes("?")) return false; // "Combos" is a filtered view of Menu
-      return path === "/" ? pathname === "/" : pathname.startsWith(path);
+      return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
     },
     [pathname],
   );
@@ -88,6 +86,10 @@ export function Navbar({ links, hours }: NavbarProps) {
           <button type="button" onClick={() => setSearchOpen(true)} aria-label="Search the menu" className={cn(iconButton, "xl:hidden")}>
             <Search aria-hidden="true" className="size-5" />
           </button>
+
+          <Link href="/favourites" aria-label="Favourites" className={cn(iconButton, "hidden sm:flex")}>
+            <Heart aria-hidden="true" className="size-5" />
+          </Link>
 
           <Link href="/login" aria-label="Log in" className={cn(iconButton, "hidden sm:flex")}>
             <UserRound aria-hidden="true" className="size-5" />

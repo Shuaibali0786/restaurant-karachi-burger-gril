@@ -6,6 +6,7 @@ import { Flame } from "lucide-react";
 import type { ResolvedLine } from "@/lib/pricing";
 import { cn } from "@/lib/cn";
 import { formatRs } from "@/lib/format";
+import { optionSummary } from "@/lib/menu";
 import { useCart } from "@/stores/cart";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 
@@ -39,7 +40,7 @@ export function CartLine({ entry, onNavigate, size = "compact" }: CartLineProps)
               {item.name}
             </Link>
             <p className="text-sm text-ink-600">
-              {option.label}
+              {optionSummary(option)}
               {addons.length > 0 && <> · + {addons.map((a) => a.label).join(", ")}</>}
             </p>
             {line.note && (

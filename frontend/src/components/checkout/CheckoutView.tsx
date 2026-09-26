@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ArrowLeft, Loader2, Lock } from "lucide-react";
 import type { DeliveryAreaOption, MenuItemView, Order } from "@/lib/types";
 import { formatRs } from "@/lib/format";
+import { optionSummary } from "@/lib/menu";
 import { useCartView } from "@/hooks/useCartView";
 import { useCart } from "@/stores/cart";
 import { buttonClasses } from "@/components/ui/Button";
@@ -45,7 +46,7 @@ export function CheckoutView({ items, areas }: CheckoutViewProps) {
   const summaryLines = lines.map(({ line, item, option, addons, lineTotal }) => ({
     key: line.key,
     name: item.name,
-    optionLabel: option.label,
+    optionLabel: optionSummary(option),
     addonLabels: addons.map((a) => a.label),
     note: line.note,
     quantity: line.quantity,

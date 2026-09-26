@@ -34,6 +34,7 @@ combos → grand-combo.
 | `Option.id` | string | e.g. `single`, `double`, `meal`, `regular`, `large`, `family-pack` |
 | `Option.label` | string | e.g. "Double" |
 | `Option.priceDelta` | number | ≥ 0 |
+| `Option.includes` | string, optional | what the option adds, e.g. Meal → "Masala Fries + Chilled Cola" |
 
 Category-level deltas come from the spec's Menu Catalogue. **Fried Chicken and BBQ deltas vary per
 item**, so `MenuItem.optionOverrides` supplies them (see below).

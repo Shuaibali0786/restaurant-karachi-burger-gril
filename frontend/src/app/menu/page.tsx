@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Bike, Clock3, ShieldCheck } from "lucide-react";
 import { getCategories, getMenuItems } from "@/lib/api";
-import { Reveal } from "@/components/ui/Reveal";
+import { PageHero } from "@/components/ui/PageHero";
 import { MenuBrowser } from "@/components/menu/MenuBrowser";
 import { MenuGrid } from "@/components/menu/MenuGrid";
 
@@ -23,29 +23,20 @@ export default async function MenuPage() {
 
   return (
     <>
-      <section className="relative isolate overflow-hidden bg-charcoal-950 text-cream-50">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(60%_90%_at_85%_20%,rgb(255_90_31/0.28),transparent_70%)]"
-        />
-        <div className="container-page py-12 sm:py-16">
-          <Reveal>
-            <p className="font-script text-2xl text-flame-400">Karachi ka asli zaiqa</p>
-            <h1 className="font-display mt-1 text-6xl leading-none font-black sm:text-7xl">Our Menu</h1>
-            <p className="mt-3 max-w-xl text-lg text-sand-300">
-              Burgers, fried chicken, wraps and Burns Road BBQ — made fresh when you order.
-            </p>
-            <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-sand-300">
-              {facts.map(({ Icon, label }) => (
-                <li key={label} className="flex items-center gap-2">
-                  <Icon aria-hidden="true" className="size-4 text-flame-400" />
-                  {label}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Karachi ka asli zaiqa"
+        title="Our Menu"
+        intro="Burgers, fried chicken, wraps and Burns Road BBQ — made fresh when you order."
+      >
+        <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-sand-300">
+          {facts.map(({ Icon, label }) => (
+            <li key={label} className="flex items-center gap-2">
+              <Icon aria-hidden="true" className="size-4 text-flame-400" />
+              {label}
+            </li>
+          ))}
+        </ul>
+      </PageHero>
 
       {/* Filters read the URL, so they sit in Suspense; the fallback is the full menu for no-JS/SEO. */}
       <Suspense

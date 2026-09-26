@@ -18,6 +18,8 @@ export interface Option {
   id: string;
   label: string;
   priceDelta: number;
+  /** What the option adds, e.g. a Meal's "Masala Fries + Chilled Cola". */
+  includes?: string;
 }
 
 export interface OptionGroup {

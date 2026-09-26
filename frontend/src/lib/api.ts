@@ -13,7 +13,7 @@ import { testimonials } from "@/lib/data/testimonials";
 import { ApiError } from "@/lib/api-error";
 import { lineKey } from "@/lib/cart";
 import { loadOrder, loadOrders, saveOrder } from "@/lib/local-orders";
-import { filterMenu } from "@/lib/menu";
+import { filterMenu, optionSummary } from "@/lib/menu";
 import { generateOrderId } from "@/lib/orders";
 import { cartTotals, resolveCart } from "@/lib/pricing";
 import { pkMobile } from "@/lib/validation";
@@ -131,7 +131,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
     lines: cart.lines.map((l) => ({
       itemSlug: l.item.slug,
       name: l.item.name,
-      optionLabel: l.option.label,
+      optionLabel: optionSummary(l.option),
       addonLabels: l.addons.map((a) => a.label),
       note: l.line.note,
       quantity: l.line.quantity,
@@ -151,4 +151,33 @@ export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
 /** An order placed on this device, or null. */
 export async function getOrder(id: string): Promise<Order | null> {
   return loadOrder(id);
+}
+
+/** Orders placed on this device, newest first (Track Order page). */
+export async function getRecentOrders(): Promise<Order[]> {
+  return loadOrders();
+}
+
+/*
+ * Accounts, contact messages and the newsletter are UI-only in this phase
+ * (Constitution IX): nothing is sent or stored. Phase 2 connects the backend.
+ */
+export async function login(_input: { identifier: string; password: string }): Promise<{ status: "coming-soon" }> {
+  await pause();
+  return { status: "coming-soon" };
+}
+
+export async function signup(_input: { name: string; email: string; phone: string; password: string }): Promise<{ status: "coming-soon" }> {
+  await pause();
+  return { status: "coming-soon" };
+}
+
+export async function sendContactMessage(_input: { name: string; phone: string; email: string; message: string }): Promise<{ status: "received" }> {
+  await pause();
+  return { status: "received" };
+}
+
+export async function subscribeNewsletter(_email: string): Promise<{ status: "subscribed" }> {
+  await pause();
+  return { status: "subscribed" };
 }

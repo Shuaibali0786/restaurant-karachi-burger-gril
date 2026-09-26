@@ -75,7 +75,13 @@ export const contactSchema = z
   });
 
 export const loginSchema = z.object({
-  email,
+  identifier: z
+    .string()
+    .trim()
+    .min(1, "Enter your email or mobile number")
+    .refine((value) => email.safeParse(value).success || pkMobile.safeParse(value).success, {
+      message: "Enter a valid email or a mobile number like 0300-1234567",
+    }),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 

@@ -136,6 +136,7 @@ components:
         id: { type: string }
         label: { type: string }
         priceDelta: { type: integer, minimum: 0 }
+        includes: { type: string, description: "What the option adds, e.g. Masala Fries + Chilled Cola" }
     Addon:
       type: object
       required: [id, label, price]

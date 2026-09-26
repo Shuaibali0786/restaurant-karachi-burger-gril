@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Clock, Mail, MapPin, Phone, Send } from "lucide-react";
+import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import type { NavLink, SiteInfo } from "@/lib/types";
 import { Logo } from "@/components/layout/Logo";
 import { SocialIcons } from "@/components/layout/SocialIcons";
+import { NewsletterForm } from "@/components/forms/NewsletterForm";
 
 function LinkColumn({ title, links }: { title: string; links: NavLink[] }) {
   return (
@@ -65,30 +66,10 @@ export function Footer({ site }: { site: SiteInfo }) {
             ))}
           </ul>
 
-          {/* Static in Phase 1; NewsletterForm with validation replaces it in Phase 7 (T090). */}
           <div className="mt-6 rounded-card border border-charcoal-700 bg-charcoal-900 p-4">
             <p className="font-bold text-cream-50">Get deals first</p>
             <p className="mb-3 text-sm">Weekly offers and new items. No spam.</p>
-            <div className="flex gap-2">
-              <label htmlFor="newsletter-email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="newsletter-email"
-                type="email"
-                placeholder="you@example.com"
-                autoComplete="email"
-                className="min-h-11 min-w-0 flex-1 rounded-full border border-charcoal-600 bg-charcoal-950 px-4 text-sm text-cream-50 placeholder:text-sand-300/70 focus:border-ember-500 focus:outline-none"
-              />
-              <button
-                type="button"
-                aria-label="Subscribe"
-                className="flex min-h-11 items-center gap-2 rounded-full bg-ember-500 px-4 text-sm font-bold text-charcoal-950 transition hover:bg-flame-400"
-              >
-                <Send aria-hidden="true" className="size-4" />
-                <span className="hidden sm:inline">Subscribe</span>
-              </button>
-            </div>
+            <NewsletterForm />
           </div>
         </div>
       </div>

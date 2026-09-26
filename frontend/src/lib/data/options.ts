@@ -1,5 +1,9 @@
 import type { CategorySlug, OptionGroup } from "@/lib/types";
 
+/** Every "Meal" upgrade comes with these (owner-confirmed 2026-09-26). */
+const MEAL_INCLUDES = "Masala Fries + Chilled Cola";
+const meal = (priceDelta: number) => ({ id: "meal", label: "Meal", priceDelta, includes: MEAL_INCLUDES });
+
 const group = (options: OptionGroup["options"]): OptionGroup => ({
   label: "Choose an option",
   required: true,
@@ -14,12 +18,12 @@ export const optionGroups: Record<CategorySlug, OptionGroup> = {
   burgers: group([
     { id: "single", label: "Single", priceDelta: 0 },
     { id: "double", label: "Double", priceDelta: 300 },
-    { id: "meal", label: "Meal", priceDelta: 350 },
+    meal(350),
   ]),
   wraps: group([
     { id: "regular", label: "Regular", priceDelta: 0 },
     { id: "large", label: "Large", priceDelta: 150 },
-    { id: "meal", label: "Meal", priceDelta: 300 },
+    meal(300),
   ]),
   "fried-chicken": group([
     { id: "regular", label: "Regular", priceDelta: 0 },
@@ -29,7 +33,7 @@ export const optionGroups: Record<CategorySlug, OptionGroup> = {
   sandwiches: group([
     { id: "regular", label: "Regular", priceDelta: 0 },
     { id: "large", label: "Large", priceDelta: 250 },
-    { id: "meal", label: "Meal", priceDelta: 300 },
+    meal(300),
   ]),
   bbq: group([
     { id: "single", label: "Single", priceDelta: 0 },

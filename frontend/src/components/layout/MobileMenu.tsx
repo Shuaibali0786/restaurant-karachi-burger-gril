@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useId } from "react";
-import { ArrowRight, UserRound, X } from "lucide-react";
+import { ArrowRight, Heart, UserRound, X } from "lucide-react";
 import type { NavLink } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { useModalDialog } from "@/hooks/useModalDialog";
@@ -70,6 +70,16 @@ export function MobileMenu({ id, open, onClose, links, isActive, hours }: Mobile
         <div className="space-y-3">
           <ButtonLink href="/menu" size="lg" onClick={close} className="w-full">
             Order Now
+          </ButtonLink>
+          <ButtonLink
+            href="/favourites"
+            variant="secondary"
+            size="lg"
+            onClick={close}
+            icon={<Heart aria-hidden="true" className="size-5" />}
+            className="w-full text-cream-50"
+          >
+            Favourites
           </ButtonLink>
           <ButtonLink
             href="/login"

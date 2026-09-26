@@ -64,3 +64,13 @@ describe("other forms", () => {
     expect(signupSchema.safeParse({ ...base, confirmPassword: "different1" }).error?.issues[0]?.path).toEqual(["confirmPassword"]);
   });
 });
+
+describe("login", () => {
+  it("accepts an email or a Pakistani mobile number", async () => {
+    const { loginSchema } = await import("@/lib/validation");
+    expect(loginSchema.safeParse({ identifier: "sana@example.com", password: "fire-wings-8" }).success).toBe(true);
+    expect(loginSchema.safeParse({ identifier: "0321-1234567", password: "fire-wings-8" }).success).toBe(true);
+    expect(loginSchema.safeParse({ identifier: "sana", password: "fire-wings-8" }).success).toBe(false);
+    expect(loginSchema.safeParse({ identifier: "sana@example.com", password: "short" }).success).toBe(false);
+  });
+});

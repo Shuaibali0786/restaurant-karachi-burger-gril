@@ -53,6 +53,12 @@ describe("menu catalogue", () => {
     expect(new Set(mostLoved.map((i) => i.tag)).size).toBeGreaterThanOrEqual(4);
   });
 
+  it("says what every Meal upgrade includes", async () => {
+    const meals = (await getMenuItems()).flatMap((item) => item.options.filter((o) => o.id === "meal"));
+    expect(meals.length).toBeGreaterThan(0);
+    for (const meal of meals) expect(meal.includes).toBe("Masala Fries + Chilled Cola");
+  });
+
   it("returns null for an unknown slug", async () => {
     expect(await getMenuItem("does-not-exist")).toBeNull();
   });

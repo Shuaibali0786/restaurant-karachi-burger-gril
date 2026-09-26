@@ -18,7 +18,7 @@ export const site: SiteInfo = {
   nav: [
     { label: "Home", href: "/" },
     { label: "Menu", href: "/menu" },
-    { label: "Combos", href: "/menu?category=combos" },
+    { label: "Combos", href: "/combos" },
     { label: "About", href: "/about" },
     { label: "Contact", href: "/contact" },
   ],
@@ -26,15 +26,16 @@ export const site: SiteInfo = {
     quickLinks: [
       { label: "Home", href: "/" },
       { label: "Menu", href: "/menu" },
-      { label: "Combos", href: "/menu?category=combos" },
+      { label: "Combos", href: "/combos" },
+      { label: "Favourites", href: "/favourites" },
       { label: "About Us", href: "/about" },
       { label: "Contact", href: "/contact" },
     ],
     support: [
-      { label: "FAQ", href: "/coming-soon" },
-      { label: "Track Order", href: "/coming-soon" },
-      { label: "Privacy Policy", href: "/coming-soon" },
-      { label: "Terms & Conditions", href: "/coming-soon" },
+      { label: "FAQ", href: "/faq" },
+      { label: "Track Order", href: "/track" },
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms & Conditions", href: "/terms" },
     ],
   },
   socials: [
