@@ -58,7 +58,7 @@ verified against current docs (Context7: vercel/next.js, lucide.dev).
 - **Decision**: `next/font/google` for Manrope (variable), Caveat Brush (400) and Big Shoulders
   Display (700–900), exposed as CSS variables `--font-display`, `--font-body`, `--font-script`
   and mapped in `@theme`. `display: 'swap'`, subsets `latin`.
-- **Risk / verification step**: Google Fonts has been consolidating the Big Shoulders family into a
+- **Verified 2026-09-26 (Phase 1)**: `Big_Shoulders_Display` is gone from `next/font/google`; implemented with `Big_Shoulders` (variable, `opsz` axis, `.font-display` sets opsz 72) and an explicit fallback (`adjustFontFallback: false`). Original note: Google Fonts has been consolidating the Big Shoulders family into a
   single variable family ("Big Shoulders" with an optical-size axis). At scaffold time, check the
   export name in `next/font/google`; if `Big_Shoulders_Display` is missing, use `Big_Shoulders`
   at display optical size — visually identical intent. No self-hosted files needed.
@@ -157,7 +157,7 @@ verified against current docs (Context7: vercel/next.js, lucide.dev).
 ## R10. Images
 
 - **Decision**: Copy the 38 photos to `frontend/public/images/` (same names). Every image via
-  `next/image` with explicit `sizes`; only the hero image gets `priority` (+ `fetchPriority`),
+  `next/image` with explicit `sizes`; only the hero image gets `preload` (Next 16 deprecates `priority`; `images.qualities` allowlist is now required),
   all others lazy (default). Descriptive alt text lives in the data layer next to each item.
   `fire-bg.jpg` rendered as a `fill` image with `aria-hidden` overlay, not a CSS background, so
   it is optimised.
