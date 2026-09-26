@@ -134,6 +134,15 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  /*
+   * On navigation Next.js scrollIntoView()s the new page's first element; this
+   * margin (announcement bar + sticky navbar) makes that land at the very top
+   * instead of tucking the heading under the navbar.
+   */
+  #main > * {
+    scroll-margin-top: calc(var(--nav-h) + 2.5rem);
+  }
+
   /* Visible focus on every focusable element (Constitution VI). */
   :focus-visible {
     outline: 2px solid var(--color-flame-400);

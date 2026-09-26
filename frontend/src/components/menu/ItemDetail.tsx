@@ -3,12 +3,14 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
-import { ArrowRight, Check, CircleAlert } from "lucide-react";
+import { ArrowRight, Check, CircleAlert, Flame } from "lucide-react";
 import type { MenuItemView } from "@/lib/types";
 import { MAX_NOTE_LENGTH } from "@/lib/cart";
 import { cn } from "@/lib/cn";
 import { formatRs } from "@/lib/format";
-import { lineTotal, unitPrice } from "@/lib/pricing";
+import { activePromoFor, lineTotal, promoDiscountPerUnit, unitPrice } from "@/lib/pricing";
+import { useNow } from "@/hooks/useNow";
+import { usePromos } from "@/stores/promos";
 import { useCart } from "@/stores/cart";
 import { useUi } from "@/stores/ui";
 import { Badge } from "@/components/ui/Badge";
@@ -33,6 +35,9 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
   const router = useRouter();
   const addToCart = useCart((state) => state.add);
   const showToast = useUi((state) => state.showToast);
+  const flyToCart = useUi((state) => state.flyToCart);
+  const promos = usePromos();
+  const now = useNow(30_000);
 
   const [optionId, setOptionId] = useState<string | null>(null);
   const [addonIds, setAddonIds] = useState<string[]>([]);
@@ -41,11 +46,16 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
   const [showOptionError, setShowOptionError] = useState(false);
 
   const optionsRef = useRef<HTMLFieldSetElement>(null);
+  const photoRef = useRef<HTMLDivElement>(null);
   const uid = useId();
   const headingId = titleId ?? `${uid}-title`;
   const isModal = variant === "modal";
 
-  const total = lineTotal(unitPrice(item, optionId, addonIds), quantity);
+  // Wings Wednesday (or any weekday deal) applies to the whole unit, option and add-ons included.
+  const promo = now ? activePromoFor(item.slug, promos, now) : null;
+  const unit = unitPrice(item, optionId, addonIds);
+  const total = lineTotal(unit - promoDiscountPerUnit(unit, promo), quantity);
+  const fullTotal = lineTotal(unit, quantity);
   const ready = optionId !== null;
   const TitleTag = isModal ? "h2" : "h1";
 
@@ -71,7 +81,9 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
       optionsRef.current?.querySelector("input")?.focus({ preventScroll: true });
       return;
     }
+    const photo = photoRef.current?.getBoundingClientRect();
     addToCart({ itemSlug: item.slug, optionId, addonIds, note, quantity });
+    if (photo) flyToCart(item.image, photo);
     showToast(`Added ${quantity} × ${item.name} to your cart`);
     if (isModal) onClose?.();
     else reset();
@@ -87,6 +99,7 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
     >
       {/* Photo */}
       <div
+        ref={photoRef}
         className={cn(
           "relative overflow-hidden bg-charcoal-950",
           isModal ? "aspect-[4/3] md:aspect-auto md:h-full" : "aspect-square rounded-card shadow-card lg:sticky lg:top-28 lg:self-start",
@@ -115,6 +128,12 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
               {formatRs(item.basePrice)}
               {item.options.some((o) => o.priceDelta > 0) && <span className="ml-2 text-sm font-semibold text-ink-600">base price</span>}
             </p>
+            {promo && (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-ember-500/10 px-3 py-1 text-sm font-bold text-ember-700">
+                <Flame aria-hidden="true" className="size-4" />
+                {promo.title}: {promo.percent}% off today
+              </p>
+            )}
           </header>
 
           {/* Required option */}
@@ -261,7 +280,15 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
                   : "cursor-not-allowed bg-cream-200 text-ink-600",
               )}
             >
-              <span className="tabular-nums">{formatRs(total)}</span>
+              <span className="flex items-baseline gap-1.5 tabular-nums">
+                {formatRs(total)}
+                {total < fullTotal && (
+                  <s className="text-xs font-semibold opacity-70 max-[400px]:hidden">
+                    <span className="sr-only">was </span>
+                    {formatRs(fullTotal)}
+                  </s>
+                )}
+              </span>
               <span aria-hidden="true" className="h-5 w-px bg-current opacity-30 max-[400px]:hidden" />
               <span className="flex items-center gap-1.5">
                 Add to cart <ArrowRight aria-hidden="true" className="size-4 max-[400px]:hidden" />

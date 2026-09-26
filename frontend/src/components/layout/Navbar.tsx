@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useId, useState } from "react";
-import { Menu, Search, ShoppingBag, UserRound } from "lucide-react";
+import { Menu, Search, UserRound } from "lucide-react";
 import type { NavLink } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { useScrolled } from "@/hooks/useScrolled";
-import { selectCartCount, useCart } from "@/stores/cart";
-import { useHydrated } from "@/stores/hydration";
 import { ButtonLink } from "@/components/ui/Button";
+import { CartButton } from "@/components/cart/CartButton";
 import { Logo } from "@/components/layout/Logo";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { SearchDialog } from "@/components/layout/SearchDialog";
@@ -31,10 +30,6 @@ export function Navbar({ links, hours }: NavbarProps) {
 
   const isHome = pathname === "/";
   const solid = scrolled || !isHome;
-  const hydrated = useHydrated();
-  const storedCount = useCart(selectCartCount);
-  // The bubble only renders once the saved cart has loaded and is non-empty.
-  const cartCount = hydrated ? storedCount : 0;
 
   const isActive = useCallback(
     (href: string) => {
@@ -98,18 +93,7 @@ export function Navbar({ links, hours }: NavbarProps) {
             <UserRound aria-hidden="true" className="size-5" />
           </Link>
 
-          <Link
-            href="/cart"
-            aria-label={cartCount > 0 ? `Cart, ${cartCount} items` : "Cart, empty"}
-            className={iconButton}
-          >
-            <ShoppingBag aria-hidden="true" className="size-5" />
-            {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex min-w-5 items-center justify-center rounded-full bg-ember-500 px-1 text-[0.7rem] leading-5 font-extrabold text-charcoal-950">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+          <CartButton />
 
           {/* Wrapper controls visibility: the button's own inline-flex would override `hidden`. */}
           <div className="ml-1 hidden md:block">

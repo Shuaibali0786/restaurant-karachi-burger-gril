@@ -19,9 +19,8 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ id, open, onClose, links, isActive, hours }: MobileMenuProps) {
-  const { ref, onBackdropClick } = useModalDialog(open, onClose);
+  const { ref, close, onBackdropClick } = useModalDialog(open, onClose);
   const titleId = useId();
-  const close = () => ref.current?.close();
 
   return (
     <dialog

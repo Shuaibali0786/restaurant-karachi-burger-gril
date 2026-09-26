@@ -4,6 +4,9 @@ import Image from "next/image";
 import { Plus } from "lucide-react";
 import type { MenuItemView } from "@/lib/types";
 import { cn } from "@/lib/cn";
+import { activePromoFor, promoDiscountPerUnit } from "@/lib/pricing";
+import { useNow } from "@/hooks/useNow";
+import { usePromos } from "@/stores/promos";
 import { openItem } from "@/stores/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Price } from "@/components/ui/Price";
@@ -21,6 +24,10 @@ interface ProductCardProps {
 export function ProductCard({ item, className }: ProductCardProps) {
   const open = () => openItem(item.slug);
   const hasPaidOptions = item.options.some((option) => option.priceDelta > 0);
+  const promos = usePromos();
+  const now = useNow(30_000);
+  const deal = now ? activePromoFor(item.slug, promos, now) : null;
+  const price = item.basePrice - promoDiscountPerUnit(item.basePrice, deal);
 
   return (
     <article
@@ -56,7 +63,19 @@ export function ProductCard({ item, className }: ProductCardProps) {
         <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-600">{item.description}</p>
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-4">
-          <Price amount={item.basePrice} from={hasPaidOptions} className="text-lg text-ink-900" />
+          <div>
+            {deal && (
+              <span className="mb-1 inline-block rounded-full bg-ember-500/10 px-2 py-0.5 text-xs font-bold text-ember-700">
+                {deal.title} −{deal.percent}%
+              </span>
+            )}
+            <Price
+              amount={price}
+              wasAmount={deal ? item.basePrice : undefined}
+              from={hasPaidOptions}
+              className="text-lg text-ink-900"
+            />
+          </div>
           <button
             type="button"
             onClick={open}

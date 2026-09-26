@@ -15,7 +15,7 @@ interface SearchDialogProps {
 export function SearchDialog({ open, onClose }: SearchDialogProps) {
   const router = useRouter();
   const [term, setTerm] = useState("");
-  const { ref, onBackdropClick } = useModalDialog(open, onClose);
+  const { ref, close, onBackdropClick } = useModalDialog(open, onClose);
   const inputRef = useRef<HTMLInputElement>(null);
   const titleId = useId();
 
@@ -26,7 +26,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
 
   const search = (value: string) => {
     const query = value.trim();
-    ref.current?.close();
+    close();
     router.push(query ? `/menu?q=${encodeURIComponent(query)}` : "/menu");
   };
 
@@ -49,7 +49,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
           </h2>
           <button
             type="button"
-            onClick={() => ref.current?.close()}
+            onClick={close}
             aria-label="Close search"
             className="flex size-11 items-center justify-center rounded-full text-ink-600 hover:bg-cream-100 hover:text-ink-900"
           >

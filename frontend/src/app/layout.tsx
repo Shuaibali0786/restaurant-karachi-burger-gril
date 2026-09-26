@@ -3,11 +3,13 @@ import { Suspense, type ReactNode } from "react";
 import "./globals.css";
 import { fontVariables } from "./fonts";
 import { Providers } from "./providers";
-import { getMenuItems, getSiteInfo } from "@/lib/api";
+import { getMenuItems, getPromos, getSiteInfo } from "@/lib/api";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { SkipLink } from "@/components/layout/SkipLink";
+import { CartDrawer } from "@/components/cart/CartDrawer";
+import { FlyToCart } from "@/components/cart/FlyToCart";
 import { ItemModal } from "@/components/menu/ItemModal";
 import { Toaster } from "@/components/ui/Toaster";
 
@@ -27,12 +29,12 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const [site, items] = await Promise.all([getSiteInfo(), getMenuItems()]);
+  const [site, items, promos] = await Promise.all([getSiteInfo(), getMenuItems(), getPromos()]);
 
   return (
     <html lang="en" className={fontVariables}>
       <body className="flex min-h-dvh flex-col">
-        <Providers>
+        <Providers promos={promos}>
           <SkipLink />
           <AnnouncementBar text={site.announcement} />
           <Navbar links={site.nav} hours={site.hours} />
@@ -44,6 +46,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <Suspense fallback={null}>
             <ItemModal items={items} />
           </Suspense>
+          <CartDrawer items={items} />
+          <FlyToCart />
           <Toaster />
         </Providers>
       </body>

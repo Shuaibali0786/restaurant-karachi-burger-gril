@@ -9,7 +9,31 @@ interface Toast {
   message: string;
 }
 
+/** A photo flying from the item view into the cart icon. */
+interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface Flight {
+  id: number;
+  src: string;
+  from: Box;
+  to: Box;
+}
+
+const box = (rect: DOMRect): Box => ({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+
 interface UiState {
+  flight: Flight | null;
+  /** Starts the fly-to-cart animation (skipped for reduced motion — the badge still bounces). */
+  flyToCart: (src: string, from: DOMRect) => void;
+  endFlight: () => void;
+  /** Incremented whenever something lands in the cart; the cart badge bounces on change. */
+  cartBump: number;
+  bumpCart: () => void;
   cartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
@@ -21,7 +45,20 @@ interface UiState {
   dismissToast: () => void;
 }
 
-export const useUi = create<UiState>()((set) => ({
+export const useUi = create<UiState>()((set, get) => ({
+  flight: null,
+  flyToCart: (src, from) => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const target = get().cartIcon?.getBoundingClientRect();
+    if (reduce || !target) {
+      set((state) => ({ cartBump: state.cartBump + 1 }));
+      return;
+    }
+    set({ flight: { id: Date.now(), src, from: box(from), to: box(target) } });
+  },
+  endFlight: () => set((state) => ({ flight: null, cartBump: state.cartBump + 1 })),
+  cartBump: 0,
+  bumpCart: () => set((state) => ({ cartBump: state.cartBump + 1 })),
   cartOpen: false,
   openCart: () => set({ cartOpen: true }),
   closeCart: () => set({ cartOpen: false }),

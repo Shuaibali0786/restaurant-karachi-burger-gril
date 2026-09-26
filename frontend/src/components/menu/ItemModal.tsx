@@ -23,8 +23,7 @@ export function ItemModal({ items }: { items: MenuItemView[] }) {
     restoreItemOpenerFocus();
   }, []);
 
-  const { ref, onBackdropClick } = useModalDialog(item !== null, onDialogClosed);
-  const close = () => ref.current?.close();
+  const { ref, close, onBackdropClick } = useModalDialog(item !== null, onDialogClosed);
 
   // overflow-clip (not hidden): focusing a field must never scroll the dialog box
   // itself — only the inner content scrolls, keeping the order bar pinned.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, type MouseEvent } from "react";
 
 /**
  * Drives a native <dialog> as a modal: `showModal()` gives focus containment,
@@ -42,9 +42,19 @@ export function useModalDialog(open: boolean, onClose: () => void) {
   // Never leave the page scroll-locked if the dialog unmounts while open.
   useEffect(() => () => void (document.documentElement.style.overflow = ""), []);
 
+  /**
+   * Closes the dialog and releases the scroll lock synchronously — the native
+   * "close" event fires a task later, too late for a link navigation to scroll
+   * the next page to the top.
+   */
+  const close = useCallback(() => {
+    document.documentElement.style.overflow = "";
+    ref.current?.close();
+  }, []);
+
   const onBackdropClick = (event: MouseEvent<HTMLDialogElement>) => {
-    if (event.target === event.currentTarget) event.currentTarget.close();
+    if (event.target === event.currentTarget) close();
   };
 
-  return { ref, onBackdropClick };
+  return { ref, close, onBackdropClick };
 }
