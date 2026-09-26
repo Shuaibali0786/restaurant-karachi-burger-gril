@@ -99,7 +99,7 @@ paths:
     get:
       summary: Get an order and its current status
       parameters:
-        - { name: id, in: path, required: true, schema: { type: string, pattern: '^KBG-\d{6}$' } }
+        - { name: id, in: path, required: true, schema: { type: string, pattern: '^KBG-\d{5}$' } }
       responses:
         '200':
           description: OK
@@ -210,7 +210,14 @@ components:
           properties:
             area: { $ref: '#/components/schemas/DeliveryArea' }
             address: { type: string, minLength: 10, maxLength: 200 }
+            landmark: { type: string, maxLength: 80 }
             notes: { type: string, maxLength: 200 }
+        timing:
+          type: object
+          required: [type]
+          properties:
+            type: { type: string, enum: [asap, scheduled] }
+            slot: { type: string, format: date-time, description: Required when type is scheduled }
         payment: { type: string, enum: [cod] }
         lines:
           type: array
@@ -241,7 +248,7 @@ components:
       type: object
       required: [id, customer, delivery, payment, lines, totals, placedAt, status]
       properties:
-        id: { type: string, pattern: '^KBG-\d{6}$' }
+        id: { type: string, pattern: '^KBG-\d{5}$' }
         customer: { $ref: '#/components/schemas/PlaceOrderInput/properties/customer' }
         delivery: { $ref: '#/components/schemas/PlaceOrderInput/properties/delivery' }
         payment: { type: string, enum: [cod] }

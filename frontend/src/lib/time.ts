@@ -52,6 +52,37 @@ export function isOpenNow(now: Date): boolean {
   return hours >= OPENS_AT || hours < CLOSES_AT;
 }
 
+const SLOT_MS = 30 * 60_000;
+const SCHEDULE_LEAD_MS = 45 * 60_000;
+
+/** "9:05 PM" on the Pakistan wall clock. */
+export function formatPktTime(date: Date): string {
+  const shifted = new Date(date.getTime() + PKT_OFFSET);
+  const hours = shifted.getUTCHours();
+  const minutes = String(shifted.getUTCMinutes()).padStart(2, "0");
+  return `${hours % 12 || 12}:${minutes} ${hours < 12 ? "AM" : "PM"}`;
+}
+
+/**
+ * "Schedule for later today" slots: every 30 minutes, at least 45 minutes
+ * from now, within the current service day (12 noon – 3 AM PKT). The last
+ * slot is 2:30 AM so the order arrives before closing.
+ */
+export function scheduleSlots(now: Date): Date[] {
+  const midnight = now.getTime() - msSincePktMidnight(now);
+  const afterMidnight = pktParts(now).hours < CLOSES_AT;
+  const opens = midnight + (afterMidnight ? OPENS_AT - 24 : OPENS_AT) * HOUR;
+  const closes = midnight + (afterMidnight ? CLOSES_AT : CLOSES_AT + 24) * HOUR;
+
+  const earliest = Math.max(now.getTime() + SCHEDULE_LEAD_MS, opens + SLOT_MS);
+  const slots: Date[] = [];
+  // PKT is a whole-hour offset, so UTC half-hour boundaries are PKT :00/:30 too.
+  for (let t = Math.ceil(earliest / SLOT_MS) * SLOT_MS; t <= closes - SLOT_MS; t += SLOT_MS) {
+    slots.push(new Date(t));
+  }
+  return slots;
+}
+
 /** Splits a duration into whole days, hours, minutes and seconds. */
 export function splitDuration(ms: number) {
   const total = Math.max(0, Math.floor(ms / 1000));

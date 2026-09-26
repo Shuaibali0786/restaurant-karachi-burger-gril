@@ -10,7 +10,13 @@ import { menuItems } from "@/lib/data/menu-items";
 import { promos } from "@/lib/data/promos";
 import { site } from "@/lib/data/site";
 import { testimonials } from "@/lib/data/testimonials";
+import { ApiError } from "@/lib/api-error";
+import { lineKey } from "@/lib/cart";
+import { loadOrder, loadOrders, saveOrder } from "@/lib/local-orders";
 import { filterMenu } from "@/lib/menu";
+import { generateOrderId } from "@/lib/orders";
+import { cartTotals, resolveCart } from "@/lib/pricing";
+import { pkMobile } from "@/lib/validation";
 import type {
   Category,
   CategorySlug,
@@ -19,6 +25,8 @@ import type {
   MenuItem,
   MenuItemView,
   MenuQuery,
+  Order,
+  PlaceOrderInput,
   Promo,
   SiteInfo,
   Testimonial,
@@ -82,4 +90,65 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 
 export async function getDeliveryAreas(): Promise<DeliveryAreaOption[]> {
   return deliveryAreas;
+}
+
+/** Short, realistic pause so the checkout button's loading state is visible (browser only). */
+const MOCK_LATENCY_MS = 700;
+const pause = () =>
+  typeof window === "undefined" ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
+
+/**
+ * Places a Cash-on-Delivery order. Like the future backend, it trusts no prices
+ * from the client: every line is re-priced from the menu and today's deals.
+ */
+export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
+  if (input.lines.length === 0) throw new ApiError("EMPTY_CART", "Your cart is empty.");
+
+  const phone = pkMobile.safeParse(input.customer.phone);
+  const area = deliveryAreas.find((a) => a.id === input.delivery.area);
+  if (!phone.success || !area || input.customer.name.trim().length < 2 || input.delivery.address.trim().length < 10) {
+    throw new ApiError("VALIDATION_FAILED", "Please check your delivery details.");
+  }
+
+  const now = new Date();
+  const cart = resolveCart(
+    input.lines.map((line) => ({ ...line, key: lineKey(line) })),
+    views,
+    promos,
+    now,
+  );
+  if (cart.invalidKeys.length > 0) {
+    throw new ApiError("UNKNOWN_ITEM", "Some items in your cart are no longer on the menu. Please review your cart.");
+  }
+
+  const totals = cartTotals(cart.lines);
+  const order: Order = {
+    id: generateOrderId(new Set(loadOrders().map((o) => o.id))),
+    customer: { name: input.customer.name.trim(), phone: phone.data },
+    delivery: { ...input.delivery, areaName: area.name },
+    timing: input.timing,
+    payment: "cod",
+    lines: cart.lines.map((l) => ({
+      itemSlug: l.item.slug,
+      name: l.item.name,
+      optionLabel: l.option.label,
+      addonLabels: l.addons.map((a) => a.label),
+      note: l.line.note,
+      quantity: l.line.quantity,
+      unitPrice: l.unitPrice,
+      discount: l.discountPerUnit * l.line.quantity,
+      lineTotal: l.lineTotal,
+    })),
+    totals: { subtotal: totals.subtotal, discount: totals.discount, delivery: totals.delivery, total: totals.total },
+    placedAt: now.toISOString(),
+  };
+
+  await pause();
+  saveOrder(order);
+  return order;
+}
+
+/** An order placed on this device, or null. */
+export async function getOrder(id: string): Promise<Order | null> {
+  return loadOrder(id);
 }

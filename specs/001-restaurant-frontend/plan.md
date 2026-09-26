@@ -167,4 +167,5 @@ page shares one layout.
 | Item | Why Needed | Resolution |
 |------|------------|------------|
 | Footer social icons (Instagram, Facebook, TikTok, WhatsApp) vs Principle I "no other brands' logos" | Owner requested social icons in spec; they link to our own accounts, not endorse other brands | Treated as permitted navigation glyphs; suggest constitution PATCH 1.0.1 clarifying "competitor/sponsor branding" |
+| Checkout lists JazzCash and Easypaisa ("Coming soon") vs Principle I | Owner requested these familiar Pakistani payment options | Plain text names only, no logos, clearly unavailable; same interpretation as social icons |
 | Footer/contact phone and email "placeholders" vs Principle I "no placeholders" | Owner has not supplied real contact details yet (spec Assumptions) | Formatted values kept in one data file (`lib/data/site.ts`) and listed as a launch blocker in PROJECT-JOURNEY |

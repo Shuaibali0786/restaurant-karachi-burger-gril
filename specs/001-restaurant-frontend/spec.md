@@ -71,7 +71,7 @@ details, place the order, and confirm an order number and tracker appear and the
    **Then** the order is not placed, each invalid field shows an inline message, and focus moves to
    the first invalid field.
 6. **Given** valid details and Cash on Delivery selected, **When** the customer presses "Place
-   order", **Then** a confirmation page shows an order number (format `KBG-` + 6 digits), the order
+   order", **Then** a confirmation page shows an order number (format `KBG-` + 5 digits, e.g. KBG-10234), the order
    summary, delivery address, and a tracker with stages Confirmed → Preparing → On the way →
    Delivered; the cart is emptied.
 7. **Given** the payment section, **When** the customer views "Card", **Then** it is visibly
@@ -292,16 +292,20 @@ created).
 **Checkout and confirmation**
 
 - **FR-040**: Checkout MUST collect: full name (required, 2–60 chars), Pakistani mobile number
-  (required, `03XXXXXXXXX` or `+923XXXXXXXXX`), delivery area (required; one of Saddar, Clifton,
-  DHA, PECHS, Gulshan, North Nazimabad), full address (required, 10–200 chars), delivery notes
-  (optional, max 200 chars), and payment method (Cash on Delivery selectable; Card disabled with
-  "Coming soon").
+  (required, e.g. `0300-1234567`, `03001234567`, `+92 300 1234567`; shown back as 03XX-XXXXXXX),
+  delivery area (required; one of Saddar, Clifton, DHA, PECHS, Gulshan, North Nazimabad), full
+  address (required, 10–200 chars), nearest landmark (optional, max 80), delivery notes (optional,
+  max 200), delivery time (ASAP, or a 30-minute slot later today at least 45 minutes ahead and
+  within opening hours; ASAP is unavailable while closed), and payment method (Cash on Delivery
+  selectable; Card, JazzCash and Easypaisa shown disabled with "Coming soon" — names only, no
+  logos). Owner additions 2026-09-26.
 - **FR-041**: Checkout MUST show an order summary (lines, subtotal, delivery, total).
 - **FR-042**: Placing an order MUST validate all fields, then show the confirmation page with an
-  order number, summary, address, estimated delivery "25–30 min", and the four-stage tracker; the
+  order number, summary, address, estimated arrival ("by 9:05 PM (25–30 min)" for ASAP or the
+  scheduled time), and the four-stage tracker; the
   cart is then emptied. The confirmation MUST remain viewable after refresh on the same device.
 - **FR-043**: The tracker MUST be clearly marked as a demo ("Live tracking coming soon") and
-  advance automatically through stages on a short timed schedule.
+  advance automatically through stages every few seconds (6 s per stage in this phase).
 
 **Other pages**
 

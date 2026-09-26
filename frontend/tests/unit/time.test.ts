@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatPktTime,
   isOpenNow,
+  scheduleSlots,
   isWednesdayPkt,
   msUntilNextPktMidnight,
   msUntilNextWednesdayPkt,
@@ -41,5 +43,31 @@ describe("Pakistan time helpers", () => {
     expect(isOpenNow(pkt("2026-09-30T23:59:00"))).toBe(true);
     expect(isOpenNow(pkt("2026-10-01T02:59:00"))).toBe(true);
     expect(isOpenNow(pkt("2026-10-01T03:00:00"))).toBe(false);
+  });
+});
+
+describe("delivery scheduling", () => {
+  it("formats Pakistan wall-clock times in 12-hour style", () => {
+    expect(formatPktTime(pkt("2026-09-30T21:05:00"))).toBe("9:05 PM");
+    expect(formatPktTime(pkt("2026-10-01T00:30:00"))).toBe("12:30 AM");
+    expect(formatPktTime(pkt("2026-09-30T12:00:00"))).toBe("12:00 PM");
+  });
+
+  it("offers half-hour slots at least 45 minutes ahead until 2:30 AM", () => {
+    const slots = scheduleSlots(pkt("2026-09-30T20:10:00")).map(formatPktTime);
+    expect(slots[0]).toBe("9:00 PM");
+    expect(slots.at(-1)).toBe("2:30 AM");
+    expect(slots).toHaveLength(12);
+  });
+
+  it("still offers slots after midnight until closing", () => {
+    expect(scheduleSlots(pkt("2026-10-01T01:00:00")).map(formatPktTime)).toEqual(["2:00 AM", "2:30 AM"]);
+    expect(scheduleSlots(pkt("2026-10-01T02:00:00"))).toEqual([]);
+  });
+
+  it("starts from opening time when ordering in the closed morning hours", () => {
+    const slots = scheduleSlots(pkt("2026-09-30T09:00:00")).map(formatPktTime);
+    expect(slots[0]).toBe("12:30 PM");
+    expect(slots.at(-1)).toBe("2:30 AM");
   });
 });

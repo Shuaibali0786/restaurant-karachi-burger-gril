@@ -147,10 +147,22 @@ export interface OrderLine {
   lineTotal: number;
 }
 
+export type DeliveryTiming = { type: "asap" } | { type: "scheduled"; slot: string };
+
+export interface PlaceOrderInput {
+  customer: { name: string; phone: string };
+  delivery: { area: DeliveryArea; address: string; landmark?: string; notes?: string };
+  timing: DeliveryTiming;
+  payment: "cod";
+  lines: Array<Pick<CartLine, "itemSlug" | "optionId" | "addonIds" | "note" | "quantity" | "addedAt">>;
+}
+
 export interface Order {
+  /** KBG- followed by 5 digits, e.g. KBG-10234. */
   id: string;
   customer: { name: string; phone: string };
-  delivery: { area: DeliveryArea; address: string; notes?: string };
+  delivery: { area: DeliveryArea; areaName: string; address: string; landmark?: string; notes?: string };
+  timing: DeliveryTiming;
   payment: "cod";
   lines: OrderLine[];
   totals: Omit<CartTotals, "freeDeliveryRemaining">;
