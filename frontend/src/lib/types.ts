@@ -42,7 +42,7 @@ export interface Category {
   addons: Addon[];
 }
 
-export type ItemTag = "bestseller" | "hot" | "new" | "veg";
+export type ItemTag = "bestseller" | "chef-pick" | "hot" | "new" | "veg";
 
 export type FeaturedPlacement = "most-loved" | "chef-special";
 

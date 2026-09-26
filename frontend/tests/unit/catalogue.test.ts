@@ -44,6 +44,15 @@ describe("menu catalogue", () => {
     expect(bbqDesc.map((i) => i.basePrice)).toEqual([2290, 790, 650]);
   });
 
+  it("keeps Bestseller rare (max 3) and features 10 varied Most Loved items", async () => {
+    const items = await getMenuItems();
+    expect(items.filter((i) => i.tag === "bestseller").length).toBeLessThanOrEqual(3);
+
+    const mostLoved = await getFeaturedItems("most-loved");
+    expect(mostLoved).toHaveLength(10);
+    expect(new Set(mostLoved.map((i) => i.tag)).size).toBeGreaterThanOrEqual(4);
+  });
+
   it("returns null for an unknown slug", async () => {
     expect(await getMenuItem("does-not-exist")).toBeNull();
   });

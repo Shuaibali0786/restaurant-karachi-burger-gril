@@ -57,9 +57,9 @@ item**, so `MenuItem.optionOverrides` supplies them (see below).
 | `image` | string | `/images/<file>.jpg`; file must exist |
 | `imageAlt` | string | descriptive, non-empty |
 | `description` | string | one line, ≤ 120 chars |
-| `tag` | `'bestseller' \| 'hot' \| 'new' \| 'veg' \| null` | |
-| `rating` | number | 4.5–4.9, one decimal; no review count |
-| `popularity` | number | rank 1..33 for "Popular" sort (bestsellers first, then hot) |
+| `tag` | `'bestseller' \| 'chef-pick' \| 'hot' \| 'new' \| 'veg' \| null` | at most 3 `bestseller` on the menu |
+| `rating` | number | 4.5–4.9, one decimal; not displayed until real ratings exist (Phase 2 backend) |
+| `popularity` | number | sales rank 1..33 for "Popular" sort |
 | `optionOverrides` | `Record<optionId, priceDelta>` \| undefined | only Fried Chicken & BBQ |
 | `featured` | `('most-loved' \| 'chef-special')[]` | home-page placement |
 

@@ -95,8 +95,8 @@ leads to the right place.
 **Acceptance Scenarios**:
 
 1. **Given** a visitor on the home page, **When** it loads, **Then** they see the announcement
-   bar, navbar, hero with headline, subline, two buttons, hero photo, floating badges and stats
-   card, without scrolling on a 1280px-wide screen.
+   bar, navbar, hero with headline, subline, two buttons, hero photo, floating badges and
+   "Loved across Karachi" card, without scrolling on a 1280px-wide screen.
 2. **Given** the visitor taps a category chip, **When** it is activated, **Then** they are taken
    to the menu filtered to that category.
 3. **Given** the "Most Loved Items" section, **When** the visitor switches a category tab, **Then**
@@ -235,16 +235,17 @@ created).
 - **FR-010**: Hero MUST show headline with handwritten accent "It's not just food — it's
   Karachi's fire!", subline "Fresh ingredients. Bold flavours. Unforgettable taste.", buttons
   "Order Online" (→ menu) and "View Menu" (→ menu), the Grand Combo photo with warm glow and
-  drifting ember particles, floating badges ("25–30 min delivery", "4.9 rating", a hand-drawn
-  arrow with "Freshly made"), and a stats card "50K+ happy customers".
+  drifting ember particles, floating badges ("25–30 min delivery", "Made fresh, every order", a
+  hand-drawn arrow with "Hot off the grill!"), and a card "Loved across Karachi" (no invented numbers —
+  owner decision 2026-09-26).
 - **FR-011**: Features strip MUST show four features: Fresh Ingredients, 100% Halal, 30 Min
   Delivery, Easy Online Ordering, each with an icon and one-line description.
 - **FR-012**: Categories section MUST show 8 circular photo chips (Burgers, Wraps, Fried Chicken,
   Sandwiches, BBQ, Bowls, Sides & Drinks, Combos) that link to the menu filtered by category.
 - **FR-013**: "Most Loved Items" MUST show category tabs ("All" plus categories) and product
   cards, plus a "View full menu" link.
-- **FR-014**: A product card MUST show photo, optional tag (Bestseller, Hot, New, Veg), heart
-  favourite toggle, name, one-line description, star rating (value only, no review count), price
+- **FR-014**: A product card MUST show photo, optional tag (Bestseller, Chef's Pick, Hot, New, Veg; at most 3 Bestseller items on the whole menu), heart
+  favourite toggle, name, one-line description, price
   ("from Rs X" base price) and an "Add +" button that opens the item detail view.
 - **FR-015**: Two promo banners side by side (stacked on phones): "Burger Combo — Rs 1,490 (was
   Rs 1,830)" opening the Grand Combo detail view, and "Wings Wednesday — 20% off wings" opening
@@ -359,7 +360,7 @@ Items (base price in Rs, photo file, tag, description):
 |------|----|-------|-----|-------------|
 | Burns Road Zinger | 690 | zinger-burger | Bestseller | Shatter-crisp spicy chicken fillet, garlic mayo and crunchy lettuce in a toasted sesame bun. |
 | Smoky Smash Beef | 890 | smash-burger | Hot | Two lacy-edged smashed beef patties, melted cheddar and our smoky house sauce. |
-| Double Trouble Cheese | 1190 | double-cheese-burger | Bestseller | Double beef, double cheese, double the drip — for serious hunger only. |
+| Double Trouble Cheese | 1190 | double-cheese-burger | Hot | Double beef, double cheese, double the drip — for serious hunger only. |
 | Tandoori Grill Burger | 790 | grilled-chicken-burger | — | Charcoal-grilled tandoori chicken thigh with mint raita slaw and pickled onions. |
 | Midnight Mushroom Melt | 950 | mushroom-burger | New | Juicy beef patty under sautéed garlic mushrooms and a blanket of Swiss cheese. |
 
@@ -394,7 +395,7 @@ Items (base price in Rs, photo file, tag, description):
 
 | Item | Rs | Photo | Tag | Description |
 |------|----|-------|-----|-------------|
-| Grill Mix Platter | 2290 | grill-platter | Bestseller | A sharing feast of tikka, kebabs and BBQ leg straight off the coals, with naan and chutney. |
+| Grill Mix Platter | 2290 | grill-platter | Chef's Pick | A sharing feast of tikka, kebabs and BBQ leg straight off the coals, with naan and chutney. |
 | Charcoal Chicken Tikka | 790 | chicken-tikka | Hot | Burns Road-style chicken tikka, smoky, charred and bursting with masala. |
 | Smoky BBQ Leg | 650 | bbq-chicken-leg | — | A whole chicken leg slow-grilled over charcoal and basted in tangy BBQ masala. |
 
@@ -403,7 +404,7 @@ Items (base price in Rs, photo file, tag, description):
 | Item | Rs | Photo | Tag | Description |
 |------|----|-------|-----|-------------|
 | Garden Fresh Bowl | 590 | salad-bowl | Veg | Crisp greens, cucumber, cherry tomatoes and sweetcorn with lemon-herb dressing. |
-| Tikka Rice Bowl | 850 | rice-bowl | Bestseller | Fragrant rice topped with charcoal chicken tikka, salad and garlic sauce. |
+| Tikka Rice Bowl | 850 | rice-bowl | Chef's Pick | Fragrant rice topped with charcoal chicken tikka, salad and garlic sauce. |
 | Grilled Caesar | 790 | caesar-salad | — | Grilled chicken over romaine with parmesan, crunchy croutons and creamy Caesar dressing. |
 | Power Quinoa Bowl | 990 | quinoa-bowl | New | Protein-packed quinoa, grilled chicken, avocado and roasted veggies. |
 
@@ -417,17 +418,18 @@ Items (base price in Rs, photo file, tag, description):
 | Mozzarella Sticks | 690 | mozzarella-sticks | — | Golden-fried mozzarella with a long, stretchy cheese pull and marinara dip. |
 | Chocolate Thick Shake | 550 | milkshake | — | A thick, creamy chocolate shake topped with whipped cream. |
 | Chilled Cola | 150 | cold-drink | — | An ice-cold fizzy cola to cool the fire. |
-| Mint Margarita | 350 | mint-margarita | Bestseller | Karachi's favourite frozen mint and lemon cooler. |
+| Mint Margarita | 350 | mint-margarita | Veg | Karachi's favourite frozen mint and lemon cooler. |
 | Iced Caramel Coffee | 490 | iced-coffee | — | Smooth cold coffee swirled with caramel over ice. |
 
 **Combos**
 
 | Item | Rs | Photo | Tag | Description |
 |------|----|-------|-----|-------------|
-| Grand Combo | 1490 | grand-combo | Bestseller | Our signature burger, masala fries and a chilled drink — the full Karachi feast. |
+| Grand Combo | 1490 | grand-combo | Chef's Pick | Our signature burger, masala fries and a chilled drink — the full Karachi feast. |
 
-"Popular" sort order: Bestseller items first (in catalogue order), then Hot, then the rest.
-Item ratings shown on cards range 4.5–4.9 (values only, no review counts).
+"Popular" sort order: a fixed sales rank per item (popularity 1–33) held in the data layer.
+Item star ratings are NOT shown on food cards or chef's special tiles until real ratings come from
+the backend (owner decision 2026-09-26); stars appear only on the labelled sample reviews.
 
 ### Key Entities
 
@@ -470,8 +472,8 @@ Item ratings shown on cards range 4.5–4.9 (values only, no review counts).
 - The "Burger Combo — Rs 1,490 (was Rs 1,830)" promo refers to the Grand Combo item.
 - "Free delivery over Rs 1,500" is applied at a subtotal of Rs 1,500 or more.
 - Items with a required option have no option preselected (constitution Principle III).
-- "4.9 rating" and "50K+ happy customers" in the hero are owner-confirmed brand figures
-  (2026-09-26) and will be replaced by backend data later; item ratings are shown as values only.
+- The hero shows no customer counts or ratings (owner decision 2026-09-26, replacing "4.9 rating" and
+  "50K+ happy customers"); item ratings on cards are shown as values only.
 - Add-ons for Wraps, Fried Chicken, Sandwiches, BBQ and Bowls were proposed by the assistant and
   approved by the owner on 2026-09-26.
 
@@ -484,7 +486,13 @@ Item ratings shown on cards range 4.5–4.9 (values only, no review counts).
 - Q: Is the Wings Wednesday 20% discount actually applied? → A: Yes, automatically on Fire Wings
   on Wednesdays PKT only; other days the banner counts down to next Wednesday (FR-015a).
 - Q: Extras for non-burger categories? → A: Use the assistant's suggested lists (Menu Catalogue).
-- Q: Are "4.9 rating" and "50K+ happy customers" real? → A: Keep as owner-supplied brand figures.
+- Q: Are "4.9 rating" and "50K+ happy customers" real? → A: Initially kept; **revised later the same
+  day** — replaced with "Made fresh, every order" and "Loved across Karachi" (no fake numbers).
+- Q: Show illustrative star ratings on food cards? → A: No — hidden until real backend ratings;
+  stars only on sample reviews. Hero doodle changed to "Hot off the grill!".
+- Q: Should most cards say Bestseller? → A: No — at most 3 Bestseller items; others use Hot, New,
+  Chef's Pick or Veg. Tags revised: Double Trouble Cheese → Hot; Grill Mix Platter, Tikka Rice Bowl,
+  Grand Combo → Chef's Pick; Mint Margarita → Veg.
 - Phone and email in the footer/contact use clearly formatted placeholder values
   (e.g. `+92 3XX XXXXXXX`, `hello@…`) until the owner provides real ones.
 - Order confirmation and tracking are simulated on the device; no order reaches the restaurant in

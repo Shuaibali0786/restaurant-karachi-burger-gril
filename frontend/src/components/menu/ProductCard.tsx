@@ -7,7 +7,6 @@ import { cn } from "@/lib/cn";
 import { useUi } from "@/stores/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Price } from "@/components/ui/Price";
-import { Rating } from "@/components/ui/Rating";
 import { FavouriteButton } from "@/components/menu/FavouriteButton";
 
 interface ProductCardProps {
@@ -56,7 +55,6 @@ export function ProductCard({ item, className }: ProductCardProps) {
           </button>
         </h3>
         <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-600">{item.description}</p>
-        <Rating value={item.rating} className="mt-2" />
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-4">
           <Price amount={item.basePrice} from={hasPaidOptions} className="text-lg text-ink-900" />

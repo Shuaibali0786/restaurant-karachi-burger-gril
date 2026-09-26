@@ -2,8 +2,8 @@ import type { MenuItem } from "@/lib/types";
 
 /**
  * The 33-item menu. Names, prices, photos, tags and descriptions are copied
- * verbatim from the spec Menu Catalogue. `popularity`: bestsellers first, then
- * hot, then catalogue order. Fried Chicken/BBQ size prices: spec size table.
+ * verbatim from the spec Menu Catalogue (tags revised by the owner on 2026-09-26:
+ * at most 3 Bestsellers). `popularity` is the sales rank used by the "Popular" sort. Fried Chicken/BBQ size prices: spec size table.
  */
 const item = (
   data: Omit<MenuItem, "image" | "featured"> & { image: string; featured?: MenuItem["featured"] },
@@ -45,7 +45,7 @@ export const menuItems: MenuItem[] = [
     image: "double-cheese-burger",
     imageAlt: "Double Trouble Cheese burger with two beef patties and dripping cheese",
     description: "Double beef, double cheese, double the drip — for serious hunger only.",
-    tag: "bestseller",
+    tag: "hot",
     rating: 4.9,
     popularity: 2,
   }),
@@ -86,7 +86,6 @@ export const menuItems: MenuItem[] = [
     tag: "hot",
     rating: 4.7,
     popularity: 10,
-    featured: ["most-loved"],
   }),
   item({
     slug: "saddar-shawarma",
@@ -194,7 +193,6 @@ export const menuItems: MenuItem[] = [
     tag: null,
     rating: 4.6,
     popularity: 20,
-    featured: ["most-loved"],
   }),
   item({
     slug: "cheesy-grill-sandwich",
@@ -243,7 +241,7 @@ export const menuItems: MenuItem[] = [
     image: "grill-platter",
     imageAlt: "Sizzling Grill Mix Platter of tikka and kebabs straight off the coals",
     description: "A sharing feast of tikka, kebabs and BBQ leg straight off the coals, with naan and chutney.",
-    tag: "bestseller",
+    tag: "chef-pick",
     rating: 4.9,
     popularity: 5,
     optionOverrides: { double: 2060, "family-pack": 5040 },
@@ -261,7 +259,6 @@ export const menuItems: MenuItem[] = [
     rating: 4.8,
     popularity: 12,
     optionOverrides: { double: 710, "family-pack": 1740 },
-    featured: ["most-loved"],
   }),
   item({
     slug: "smoky-bbq-leg",
@@ -298,10 +295,9 @@ export const menuItems: MenuItem[] = [
     image: "rice-bowl",
     imageAlt: "Tikka Rice Bowl with grilled chicken, a fried egg and garlic sauce",
     description: "Fragrant rice topped with charcoal chicken tikka, salad and garlic sauce.",
-    tag: "bestseller",
+    tag: "chef-pick",
     rating: 4.8,
     popularity: 6,
-    featured: ["most-loved"],
   }),
   item({
     slug: "grilled-caesar",
@@ -353,7 +349,7 @@ export const menuItems: MenuItem[] = [
     tag: "hot",
     rating: 4.8,
     popularity: 13,
-    featured: ["most-loved", "chef-special"],
+    featured: ["chef-special"],
   }),
   item({
     slug: "crispy-onion-rings",
@@ -411,7 +407,7 @@ export const menuItems: MenuItem[] = [
     image: "mint-margarita",
     imageAlt: "Mint Margarita frozen cooler with a lemon slice",
     description: "Karachi's favourite frozen mint and lemon cooler.",
-    tag: "bestseller",
+    tag: "veg",
     rating: 4.8,
     popularity: 7,
     featured: ["most-loved"],
@@ -438,7 +434,7 @@ export const menuItems: MenuItem[] = [
     image: "grand-combo",
     imageAlt: "Grand Combo: cheeseburger, fries and a chilled drink",
     description: "Our signature burger, masala fries and a chilled drink — the full Karachi feast.",
-    tag: "bestseller",
+    tag: "chef-pick",
     rating: 4.9,
     popularity: 8,
     featured: ["most-loved", "chef-special"],

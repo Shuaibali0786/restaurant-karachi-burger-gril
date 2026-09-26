@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { ArrowRight, Bike, Clock3, MapPin, ShieldCheck, Star, UtensilsCrossed } from "lucide-react";
+import { ArrowRight, Bike, ChefHat, Clock3, Heart, MapPin, ShieldCheck, UtensilsCrossed } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
 import { EmberParticles } from "@/components/home/EmberParticles";
@@ -139,38 +139,26 @@ export function Hero() {
           </div>
 
           <div
-            className={`${floatCard} top-[6%] right-0 flex items-center gap-2 px-3 py-2 [animation-delay:1.2s] sm:top-auto sm:right-auto sm:bottom-[20%] sm:left-[-2%]`}
+            className={`${floatCard} top-[42%] left-0 flex items-center gap-2 px-3 py-2 [animation-delay:1.2s] sm:top-auto sm:bottom-[20%] sm:left-[-2%]`}
           >
-            <Star aria-hidden="true" className="size-5 text-flame-400" fill="currentColor" strokeWidth={0} />
-            <span className="text-base font-extrabold">4.9</span>
-            <span className="text-xs font-semibold text-ink-600">rating</span>
+            <ChefHat aria-hidden="true" className="size-5 text-ember-700" />
+            <span className="text-sm font-extrabold">Made fresh, every order</span>
           </div>
 
           <div className="absolute top-[2%] right-[2%] z-20 hidden flex-col items-center text-flame-400 sm:flex">
-            <span className="font-display rotate-6 text-2xl font-extrabold tracking-wider">Freshly made</span>
+            <span className="font-display rotate-6 text-2xl font-extrabold tracking-wider">Hot off the grill!</span>
             <DoodleArrow className="-mt-1 mr-10 h-14 w-20 -scale-x-100 rotate-12" />
           </div>
 
           <div
             className={`${floatBase} right-0 bottom-0 flex items-center gap-3 bg-charcoal-900/90 p-3 pr-4 text-cream-50 ring-1 ring-charcoal-600 [animation-delay:2.2s] sm:right-[3%]`}
           >
-            <span aria-hidden="true" className="flex -space-x-2">
-              {[
-                ["A", "bg-ember-500"],
-                ["S", "bg-flame-400"],
-                ["H", "bg-ember-700"],
-              ].map(([initial, bg]) => (
-                <span
-                  key={initial}
-                  className={`flex size-8 items-center justify-center rounded-full text-xs font-extrabold text-charcoal-950 ring-2 ring-charcoal-900 ${bg}`}
-                >
-                  {initial}
-                </span>
-              ))}
+            <span className="flex size-10 items-center justify-center rounded-full bg-ember-500/15 text-ember-500 ring-1 ring-ember-500/40">
+              <Heart aria-hidden="true" className="size-5" fill="currentColor" />
             </span>
             <span className="leading-tight">
-              <span className="font-display block text-3xl font-black text-flame-400">50K+</span>
-              <span className="block text-xs font-semibold text-sand-300">Happy customers</span>
+              <span className="font-display block text-lg font-black text-flame-400 sm:text-2xl">Loved across Karachi</span>
+              <span className="block text-xs font-semibold text-sand-300">Delivering from Saddar to DHA</span>
             </span>
           </div>
         </div>

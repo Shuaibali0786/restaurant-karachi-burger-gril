@@ -28,7 +28,7 @@ Lighthouse (Principle VII): `npm run build && npm run start`, then run Lighthous
 
 ## Manual acceptance walkthrough (≈ 5 min)
 
-1. **Home** at 360px and 1280px: announcement bar, hero (headline, badges, "50K+" card, embers),
+1. **Home** at 360px and 1280px: announcement bar, hero (headline, badges, "Loved across Karachi" card, embers),
    features, 8 category chips, Most Loved tabs, two promo banners with live countdown, Chef's
    specials, About teaser, "Sample reviews" label, "Taste the fire" band, footer.
 2. **Customise → cart**: tap "Add +" on Burns Road Zinger → modal opens, cart unchanged → button
