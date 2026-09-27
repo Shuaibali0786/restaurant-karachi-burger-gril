@@ -68,6 +68,10 @@ export interface MenuItem {
 export interface MenuItemView extends Omit<MenuItem, "optionOverrides"> {
   options: Option[];
   addons: Addon[];
+  /** Shown on the menu but cannot be ordered (staff marked it sold out). */
+  soldOut: boolean;
+  /** false = hidden from menu lists; its own page shows "not available". */
+  available: boolean;
 }
 
 export type MenuSort = "popular" | "price-asc" | "price-desc";
@@ -105,14 +109,20 @@ export interface Testimonial {
   area: string;
   quote: string;
   rating: number;
-  isSample: true;
+  /** "2026-09" for real reviews. */
+  month?: string;
+  /** true until at least 3 real reviews are approved; drives the "Sample reviews" label. */
+  isSample: boolean;
 }
 
-export type DeliveryArea = "saddar" | "clifton" | "dha" | "pechs" | "gulshan" | "north-nazimabad";
+/** An area slug such as "clifton". Staff can add areas, so this is no longer a fixed union. */
+export type DeliveryArea = string;
 
 export interface DeliveryAreaOption {
   id: DeliveryArea;
   name: string;
+  /** Delivery fee in rupees for this area. */
+  fee: number;
 }
 
 export interface CartLine {
@@ -135,12 +145,14 @@ export interface CartTotals {
 
 export type PaymentMethod = "cod" | "card";
 
-export type OrderStatus = "confirmed" | "preparing" | "on-the-way" | "delivered";
+export type OrderStatus = "confirmed" | "preparing" | "on-the-way" | "delivered" | "cancelled";
 
 export interface OrderLine {
   itemSlug: string;
   name: string;
+  optionId: string;
   optionLabel: string;
+  addonIds: string[];
   addonLabels: string[];
   note: string;
   quantity: number;
@@ -159,16 +171,78 @@ export interface PlaceOrderInput {
   lines: Array<Pick<CartLine, "itemSlug" | "optionId" | "addonIds" | "note" | "quantity" | "addedAt">>;
 }
 
+export type OrderViewer = "public" | "owner" | "admin";
+
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
 export interface Order {
   /** KBG- followed by 5 digits, e.g. KBG-10234. */
   id: string;
+  /** The phone is masked for the public viewer. */
   customer: { name: string; phone: string };
-  delivery: { area: DeliveryArea; areaName: string; address: string; landmark?: string; notes?: string };
+  /** address and landmark are omitted for the public viewer. */
+  delivery: { area: DeliveryArea; areaName: string; address?: string; landmark?: string; notes?: string };
   timing: DeliveryTiming;
   payment: "cod";
   lines: OrderLine[];
   totals: Omit<CartTotals, "freeDeliveryRemaining">;
   placedAt: string;
+  status: OrderStatus;
+  statusHistory: { status: OrderStatus; at: string }[];
+  viewer: OrderViewer;
+  /** Present for the owner once they have reviewed the order. */
+  review?: { rating: number; status: ReviewStatus };
+}
+
+export type UserRole = "customer" | "admin";
+
+export interface SessionUser {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role: UserRole;
+}
+
+export interface AdminOrderSummary {
+  id: string;
+  customerName: string;
+  areaName: string;
+  status: OrderStatus;
+  total: number;
+  itemCount: number;
+  timing: DeliveryTiming;
+  placedAt: string;
+}
+
+export interface TodaySummary {
+  /** YYYY-MM-DD business day (12 noon - 3 AM Pakistan time). */
+  businessDate: string;
+  /** Orders today, excluding cancelled. */
+  orderCount: number;
+  /** Sum of order totals in rupees, excluding cancelled. */
+  salesTotal: number;
+  byStatus: Partial<Record<OrderStatus, number>>;
+}
+
+export interface ContactMessage {
+  id: number;
+  name: string;
+  phone?: string;
+  email?: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface AdminReview {
+  id: number;
+  orderId: string;
+  customerName: string;
+  rating: number;
+  comment?: string;
+  status: ReviewStatus;
+  createdAt: string;
 }
 
 export interface NavLink {

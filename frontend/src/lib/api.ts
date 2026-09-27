@@ -17,12 +17,12 @@ import { filterMenu, optionSummary } from "@/lib/menu";
 import { generateOrderId } from "@/lib/orders";
 import { cartTotals, resolveCart } from "@/lib/pricing";
 import { normalizePkMobile } from "@/lib/phone";
+import { toView } from "@/lib/menu-view";
 import type {
   Category,
   CategorySlug,
   DeliveryAreaOption,
   FeaturedPlacement,
-  MenuItem,
   MenuItemView,
   MenuQuery,
   Order,
@@ -32,24 +32,7 @@ import type {
   Testimonial,
 } from "@/lib/types";
 
-const categoryById = new Map(categories.map((category) => [category.id, category]));
-
 const categoryNames = Object.fromEntries(categories.map((c) => [c.id, c.name])) as Record<CategorySlug, string>;
-
-/** Resolves an item's options (with per-item overrides) and add-ons from its category. */
-function toView({ optionOverrides, ...item }: MenuItem): MenuItemView {
-  const category = categoryById.get(item.category);
-  if (!category) throw new Error(`Unknown category "${item.category}" for "${item.slug}"`);
-
-  return {
-    ...item,
-    options: category.optionGroup.options.map((option) => ({
-      ...option,
-      priceDelta: optionOverrides?.[option.id] ?? option.priceDelta,
-    })),
-    addons: category.addons,
-  };
-}
 
 const views = menuItems.map(toView);
 
@@ -131,7 +114,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
     lines: cart.lines.map((l) => ({
       itemSlug: l.item.slug,
       name: l.item.name,
+      optionId: l.option.id,
       optionLabel: optionSummary(l.option),
+      addonIds: l.addons.map((a) => a.id),
       addonLabels: l.addons.map((a) => a.label),
       note: l.line.note,
       quantity: l.line.quantity,
@@ -141,6 +126,9 @@ export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
     })),
     totals: { subtotal: totals.subtotal, discount: totals.discount, delivery: totals.delivery, total: totals.total },
     placedAt: now.toISOString(),
+    status: "confirmed",
+    statusHistory: [{ status: "confirmed", at: now.toISOString() }],
+    viewer: "owner",
   };
 
   await pause();

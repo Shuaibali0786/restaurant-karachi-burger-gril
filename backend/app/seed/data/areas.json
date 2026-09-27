@@ -1,0 +1,44 @@
+[
+  {
+    "id": "saddar",
+    "name": "Saddar",
+    "fee": 150,
+    "order": 1,
+    "enabled": true
+  },
+  {
+    "id": "clifton",
+    "name": "Clifton",
+    "fee": 150,
+    "order": 2,
+    "enabled": true
+  },
+  {
+    "id": "dha",
+    "name": "DHA",
+    "fee": 150,
+    "order": 3,
+    "enabled": true
+  },
+  {
+    "id": "pechs",
+    "name": "PECHS",
+    "fee": 150,
+    "order": 4,
+    "enabled": true
+  },
+  {
+    "id": "gulshan",
+    "name": "Gulshan",
+    "fee": 150,
+    "order": 5,
+    "enabled": true
+  },
+  {
+    "id": "north-nazimabad",
+    "name": "North Nazimabad",
+    "fee": 150,
+    "order": 6,
+    "enabled": true
+  }
+]

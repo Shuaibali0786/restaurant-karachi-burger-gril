@@ -1,0 +1,44 @@
+[
+  {
+    "id": "sample-1",
+    "name": "Ayesha K.",
+    "area": "Clifton",
+    "quote": "The Burns Road Zinger is crunchy all the way through and the garlic mayo is perfect. Arrived hot at midnight.",
+    "rating": 5
+  },
+  {
+    "id": "sample-2",
+    "name": "Hamza R.",
+    "area": "Gulshan",
+    "quote": "Grill Mix Platter fed four of us. Smoky tikka, soft naan and that green chutney — proper Karachi BBQ.",
+    "rating": 5
+  },
+  {
+    "id": "sample-3",
+    "name": "Sana M.",
+    "area": "DHA",
+    "quote": "Fire Wings live up to the name. Ordering was quick and the rider called before arriving.",
+    "rating": 4
+  },
+  {
+    "id": "sample-4",
+    "name": "Bilal A.",
+    "area": "PECHS",
+    "quote": "Smoky Smash Beef has those crispy edges you only get when it's done right. Mint Margarita on the side is a must.",
+    "rating": 5
+  },
+  {
+    "id": "sample-5",
+    "name": "Fatima Z.",
+    "area": "North Nazimabad",
+    "quote": "Loved the Tikka Rice Bowl for a lighter dinner. Generous portion and the garlic sauce is addictive.",
+    "rating": 5
+  },
+  {
+    "id": "sample-6",
+    "name": "Usman T.",
+    "area": "Saddar",
+    "quote": "Saddar Shawarma tastes exactly like the street stalls, only cleaner. Great value too.",
+    "rating": 4
+  }
+]

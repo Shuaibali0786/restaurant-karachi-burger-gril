@@ -31,3 +31,13 @@ next-env.d.ts
 
 # Playwright MCP scratch output
 .playwright-mcp/
+
+# Python (backend)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

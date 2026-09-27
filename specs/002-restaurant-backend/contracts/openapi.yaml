@@ -1,0 +1,759 @@
+openapi: 3.1.0
+info:
+  title: Karachi Burger & Grill API
+  version: 1.0.0
+  description: >
+    Phase 2 backend contract. Supersedes specs/001-restaurant-frontend/contracts/openapi.yaml.
+    Money is integer PKR. JSON is camelCase. Every error uses the Error envelope.
+    Browsers call it same-origin through the Next.js rewrite /api/* (research R1); the session
+    is the httpOnly cookie `kbg_session`. The live, generated docs are served at /docs.
+servers:
+  - url: /api/v1
+tags:
+  - { name: menu }
+  - { name: orders }
+  - { name: auth }
+  - { name: me }
+  - { name: content }
+  - { name: admin }
+
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: kbg_session
+  parameters:
+    OrderNumber:
+      name: number
+      in: path
+      required: true
+      schema: { type: string, pattern: '^KBG-\d{5,}$', example: KBG-10234 }
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [VALIDATION_FAILED, EMPTY_CART, UNKNOWN_ITEM, INVALID_OPTION, ITEM_SOLD_OUT,
+                     AREA_UNAVAILABLE, RESTAURANT_CLOSED, INVALID_SLOT, IDEMPOTENCY_CONFLICT,
+                     UNAUTHENTICATED, INVALID_CREDENTIALS, FORBIDDEN, ACCOUNT_EXISTS, NOT_FOUND,
+                     INVALID_TRANSITION, REVIEW_NOT_ALLOWED, RATE_LIMITED, INTERNAL]
+            message: { type: string, description: Customer-readable, no internal details }
+            fields:
+              type: object
+              additionalProperties: { type: string }
+              description: Field path (dot notation) → message
+            details:
+              type: object
+              description: >
+                Code-specific extras, e.g. ITEM_SOLD_OUT → {items: [slug]},
+                INVALID_TRANSITION → {currentStatus}, RESTAURANT_CLOSED → {opensAt}
+    CategorySlug:
+      type: string
+      enum: [burgers, wraps, fried-chicken, sandwiches, bbq, bowls, sides-drinks, combos]
+    Option:
+      type: object
+      required: [id, label, priceDelta]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        priceDelta: { type: integer, minimum: 0 }
+        includes: { type: string }
+    Addon:
+      type: object
+      required: [id, label, price]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        price: { type: integer, minimum: 1 }
+    Category:
+      type: object
+      required: [id, name, image, imageAlt, order, optionGroup, addons]
+      properties:
+        id: { $ref: '#/components/schemas/CategorySlug' }
+        name: { type: string }
+        image: { type: string }
+        imageAlt: { type: string }
+        order: { type: integer }
+        optionGroup:
+          type: object
+          required: [label, required, options]
+          properties:
+            label: { type: string }
+            required: { const: true }
+            options: { type: array, items: { $ref: '#/components/schemas/Option' } }
+        addons: { type: array, items: { $ref: '#/components/schemas/Addon' } }
+    MenuItemView:
+      type: object
+      required: [slug, name, category, basePrice, image, imageAlt, description, tag, rating,
+                 popularity, featured, options, addons, soldOut, available]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        category: { $ref: '#/components/schemas/CategorySlug' }
+        basePrice: { type: integer }
+        image: { type: string }
+        imageAlt: { type: string }
+        description: { type: string }
+        tag: { type: [string, 'null'], enum: [bestseller, chef-pick, hot, new, veg, null] }
+        rating: { type: number }
+        popularity: { type: integer }
+        featured: { type: array, items: { type: string, enum: [most-loved, chef-special] } }
+        options: { type: array, items: { $ref: '#/components/schemas/Option' }, description: Category options with per-item overrides applied }
+        addons: { type: array, items: { $ref: '#/components/schemas/Addon' } }
+        soldOut: { type: boolean }
+        available: { type: boolean }
+    Promo:
+      oneOf:
+        - type: object
+          required: [id, title, kind, itemSlug, price, wasPrice, image]
+          properties:
+            id: { type: string }
+            title: { type: string }
+            kind: { const: price }
+            itemSlug: { type: string }
+            price: { type: integer }
+            wasPrice: { type: integer }
+            image: { type: string }
+        - type: object
+          required: [id, title, kind, itemSlug, weekday, percent, image]
+          properties:
+            id: { type: string }
+            title: { type: string }
+            kind: { const: weekday-percent }
+            itemSlug: { type: string }
+            weekday: { type: integer, minimum: 0, maximum: 6, description: Evaluated in Asia/Karachi }
+            percent: { type: integer }
+            image: { type: string }
+    Testimonial:
+      type: object
+      required: [id, name, area, quote, rating, isSample]
+      properties:
+        id: { type: string }
+        name: { type: string, description: First name + last initial for real reviews }
+        area: { type: string }
+        quote: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        month: { type: string, example: '2026-09' }
+        isSample: { type: boolean }
+    DeliveryAreaOption:
+      type: object
+      required: [id, name, fee]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        fee: { type: integer }
+    DeliveryTiming:
+      oneOf:
+        - type: object
+          required: [type]
+          properties: { type: { const: asap } }
+        - type: object
+          required: [type, slot]
+          properties:
+            type: { const: scheduled }
+            slot: { type: string, format: date-time }
+    PlaceOrderInput:
+      type: object
+      additionalProperties: false
+      required: [customer, delivery, timing, payment, lines]
+      properties:
+        customer:
+          type: object
+          additionalProperties: false
+          required: [name, phone]
+          properties:
+            name: { type: string, minLength: 2, maxLength: 60 }
+            phone: { type: string, description: Pakistani mobile, any common format; normalised to +923XXXXXXXXX }
+        delivery:
+          type: object
+          additionalProperties: false
+          required: [area, address]
+          properties:
+            area: { type: string }
+            address: { type: string, minLength: 10, maxLength: 200 }
+            landmark: { type: string, maxLength: 200 }
+            notes: { type: string, maxLength: 200 }
+        timing: { $ref: '#/components/schemas/DeliveryTiming' }
+        payment: { const: cod }
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: false
+            required: [itemSlug, optionId, addonIds, note, quantity, addedAt]
+            properties:
+              itemSlug: { type: string }
+              optionId: { type: string }
+              addonIds: { type: array, maxItems: 10, uniqueItems: true, items: { type: string } }
+              note: { type: string, maxLength: 500 }
+              quantity: { type: integer, minimum: 1, maximum: 20 }
+              addedAt: { type: string, format: date-time, description: Used only to explain an ended deal; never affects price }
+      description: No price fields are accepted (additionalProperties false); the server prices everything.
+    OrderLine:
+      type: object
+      required: [itemSlug, name, optionId, optionLabel, addonIds, addonLabels, note, quantity, unitPrice, discount, lineTotal]
+      properties:
+        itemSlug: { type: string }
+        name: { type: string }
+        optionId: { type: string }
+        optionLabel: { type: string }
+        addonIds: { type: array, items: { type: string } }
+        addonLabels: { type: array, items: { type: string } }
+        note: { type: string }
+        quantity: { type: integer }
+        unitPrice: { type: integer }
+        discount: { type: integer, description: Whole-line discount }
+        lineTotal: { type: integer }
+    OrderStatus:
+      type: string
+      enum: [confirmed, preparing, on-the-way, delivered, cancelled]
+    Order:
+      type: object
+      required: [id, customer, delivery, timing, payment, lines, totals, placedAt, status, statusHistory, viewer]
+      properties:
+        id: { type: string, example: KBG-10234 }
+        customer:
+          type: object
+          required: [name, phone]
+          properties:
+            name: { type: string }
+            phone: { type: string, description: Masked for viewer=public }
+        delivery:
+          type: object
+          required: [area, areaName]
+          properties:
+            area: { type: string }
+            areaName: { type: string }
+            address: { type: string, description: Omitted for viewer=public }
+            landmark: { type: string, description: Omitted for viewer=public }
+            notes: { type: string }
+        timing: { $ref: '#/components/schemas/DeliveryTiming' }
+        payment: { const: cod }
+        lines: { type: array, items: { $ref: '#/components/schemas/OrderLine' } }
+        totals:
+          type: object
+          required: [subtotal, discount, delivery, total]
+          properties:
+            subtotal: { type: integer }
+            discount: { type: integer }
+            delivery: { type: integer }
+            total: { type: integer }
+        placedAt: { type: string, format: date-time }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        statusHistory:
+          type: array
+          items:
+            type: object
+            required: [status, at]
+            properties:
+              status: { $ref: '#/components/schemas/OrderStatus' }
+              at: { type: string, format: date-time }
+        viewer: { type: string, enum: [public, owner, admin] }
+        review:
+          type: object
+          description: Present for viewer=owner when a review exists
+          properties:
+            rating: { type: integer }
+            status: { type: string, enum: [pending, approved, rejected] }
+    SignupInput:
+      type: object
+      additionalProperties: false
+      required: [name, password]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 60 }
+        email: { type: string, format: email, maxLength: 254 }
+        phone: { type: string }
+        password: { type: string, minLength: 8, maxLength: 128 }
+      description: At least one of email or phone is required.
+    LoginInput:
+      type: object
+      additionalProperties: false
+      required: [identifier, password]
+      properties:
+        identifier: { type: string, maxLength: 254, description: Email or phone }
+        password: { type: string, maxLength: 128 }
+    SessionUser:
+      type: object
+      required: [id, name, role]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        role: { type: string, enum: [customer, admin] }
+    ReorderResult:
+      type: object
+      required: [lines, skipped]
+      properties:
+        lines:
+          type: array
+          description: Cart-ready lines (current menu, orderable)
+          items:
+            type: object
+            required: [itemSlug, optionId, addonIds, note, quantity]
+            properties:
+              itemSlug: { type: string }
+              optionId: { type: string }
+              addonIds: { type: array, items: { type: string } }
+              note: { type: string }
+              quantity: { type: integer }
+        skipped: { type: array, items: { type: string }, description: Names of items no longer orderable }
+    ReviewInput:
+      type: object
+      additionalProperties: false
+      required: [rating]
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 500 }
+    AdminOrderSummary:
+      type: object
+      required: [id, customerName, areaName, status, total, itemCount, timing, placedAt]
+      properties:
+        id: { type: string }
+        customerName: { type: string }
+        areaName: { type: string }
+        status: { $ref: '#/components/schemas/OrderStatus' }
+        total: { type: integer }
+        itemCount: { type: integer }
+        timing: { $ref: '#/components/schemas/DeliveryTiming' }
+        placedAt: { type: string, format: date-time }
+    TodaySummary:
+      type: object
+      required: [businessDate, orderCount, salesTotal, byStatus]
+      properties:
+        businessDate: { type: string, format: date }
+        orderCount: { type: integer, description: Excludes cancelled }
+        salesTotal: { type: integer, description: Sum of totals, excludes cancelled }
+        byStatus: { type: object, additionalProperties: { type: integer } }
+    AdminMenuItem:
+      type: object
+      required: [slug, name, category, basePrice, available, soldOut]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        category: { $ref: '#/components/schemas/CategorySlug' }
+        basePrice: { type: integer }
+        available: { type: boolean }
+        soldOut: { type: boolean }
+    AdminArea:
+      type: object
+      required: [id, name, fee, enabled, order]
+      properties:
+        id: { type: string, pattern: '^[a-z0-9]+(-[a-z0-9]+)*$' }
+        name: { type: string, minLength: 2, maxLength: 40 }
+        fee: { type: integer, minimum: 0, maximum: 2000 }
+        enabled: { type: boolean }
+        order: { type: integer }
+    ContactMessage:
+      type: object
+      required: [id, name, message, isRead, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        message: { type: string }
+        isRead: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    AdminReview:
+      type: object
+      required: [id, orderId, customerName, rating, status, createdAt]
+      properties:
+        id: { type: integer }
+        orderId: { type: string }
+        customerName: { type: string }
+        rating: { type: integer }
+        comment: { type: string }
+        status: { type: string, enum: [pending, approved, rejected] }
+        createdAt: { type: string, format: date-time }
+
+paths:
+  # ---------- Menu (public, cacheable) ----------
+  /categories:
+    get:
+      tags: [menu]
+      summary: Categories with option groups and add-ons, sorted
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Category' } } } } }
+  /menu-items:
+    get:
+      tags: [menu]
+      summary: Available menu items (hidden items omitted; sold-out included with soldOut=true)
+      parameters:
+        - { name: category, in: query, schema: { $ref: '#/components/schemas/CategorySlug' } }
+        - { name: search, in: query, schema: { type: string, maxLength: 60 } }
+        - { name: sort, in: query, schema: { type: string, enum: [popular, price-asc, price-desc], default: popular } }
+        - { name: featured, in: query, schema: { type: string, enum: [most-loved, chef-special] } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/MenuItemView' } } } } }
+  /menu-items/{slug}:
+    get:
+      tags: [menu]
+      summary: One item (hidden items return available=false rather than 404)
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/MenuItemView' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /promos:
+    get:
+      tags: [menu]
+      summary: Active promotions
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Promo' } } } } }
+  /delivery-areas:
+    get:
+      tags: [menu]
+      summary: Enabled delivery areas with fees
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DeliveryAreaOption' } } } } }
+  /testimonials:
+    get:
+      tags: [content]
+      summary: Latest approved reviews when ≥3 exist, otherwise sample testimonials (isSample=true)
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Testimonial' } } } } }
+
+  # ---------- Orders ----------
+  /orders:
+    post:
+      tags: [orders]
+      summary: Place a Cash-on-Delivery order (guest or signed in). Rate limit 10/hour/IP.
+      security: [{}, { session: [] }]
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/PlaceOrderInput' } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        '200': { description: Replay of an already-placed order with the same key and body, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /orders/{number}:
+    get:
+      tags: [orders]
+      summary: Order with live status. Personal details masked unless owner or admin. 60/min/IP.
+      security: [{}, { session: [] }]
+      parameters: [{ $ref: '#/components/parameters/OrderNumber' }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+
+  # ---------- Auth ----------
+  /auth/signup:
+    post:
+      tags: [auth]
+      summary: Create a customer account and set the session cookie. 5/hour/IP.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/SignupInput' } } } }
+      responses:
+        '201': { description: Created (Set-Cookie kbg_session), content: { application/json: { schema: { $ref: '#/components/schemas/SessionUser' } } } }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Log in with email or phone. 20 attempts/15 min/IP; 5 failures/15 min per IP+identifier.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LoginInput' } } } }
+      responses:
+        '200': { description: OK (Set-Cookie kbg_session), content: { application/json: { schema: { $ref: '#/components/schemas/SessionUser' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Clear the session cookie
+      responses:
+        '204': { description: Signed out }
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Current session user
+      security: [{ session: [] }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SessionUser' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+
+  # ---------- Signed-in customer ----------
+  /me/orders:
+    get:
+      tags: [me]
+      summary: My orders, newest first
+      security: [{ session: [] }]
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: before, in: query, schema: { type: string, format: date-time }, description: Cursor (placedAt of the last item) }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Order' } } } } }
+        '401': { $ref: '#/components/responses/Error' }
+  /me/orders/{number}/reorder:
+    post:
+      tags: [me]
+      summary: Cart-ready lines from a past order at current menu state; unorderable items listed in skipped
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/OrderNumber' }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ReorderResult' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /me/orders/{number}/review:
+    post:
+      tags: [me]
+      summary: Review my delivered order (once). Created as pending.
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/OrderNumber' }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ReviewInput' } } } }
+      responses:
+        '201': { description: Created (pending approval) }
+        '404': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  # ---------- Contact & newsletter ----------
+  /contact-messages:
+    post:
+      tags: [content]
+      summary: Save a contact form message. 5/hour/IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, message]
+              properties:
+                name: { type: string, minLength: 2, maxLength: 60 }
+                phone: { type: string }
+                email: { type: string, format: email }
+                message: { type: string, minLength: 10, maxLength: 1000 }
+      responses:
+        '201': { description: Received, content: { application/json: { schema: { type: object, properties: { status: { const: received } } } } } }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /newsletter-subscriptions:
+    post:
+      tags: [content]
+      summary: Subscribe (idempotent per email). 5/hour/IP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email]
+              properties: { email: { type: string, format: email, maxLength: 254 } }
+      responses:
+        '200': { description: Subscribed (also for an existing email), content: { application/json: { schema: { type: object, properties: { status: { const: subscribed } } } } } }
+        '422': { $ref: '#/components/responses/Error' }
+
+  # ---------- Admin (role=admin; all 401/403 otherwise) ----------
+  /admin/auth/login:
+    post:
+      tags: [admin]
+      summary: Admin login; non-admin accounts get the same INVALID_CREDENTIALS
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/LoginInput' } } } }
+      responses:
+        '200': { description: OK (Set-Cookie kbg_session), content: { application/json: { schema: { $ref: '#/components/schemas/SessionUser' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /admin/orders:
+    get:
+      tags: [admin]
+      summary: Orders list (default today's business date), newest first. Polled every 15 s with `since`.
+      security: [{ session: [] }]
+      parameters:
+        - { name: date, in: query, schema: { type: string, format: date } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/OrderStatus' } }
+        - { name: since, in: query, schema: { type: string, format: date-time }, description: Only orders placed after this instant }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminOrderSummary' } } } } }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+  /admin/orders/{number}:
+    get:
+      tags: [admin]
+      summary: Full order with customer details (viewer=admin)
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/OrderNumber' }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /admin/orders/{number}/status:
+    patch:
+      tags: [admin]
+      summary: Change status (forward one step, or cancel before delivered); optimistic check on expectedStatus
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/OrderNumber' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [status, expectedStatus]
+              properties:
+                status: { $ref: '#/components/schemas/OrderStatus' }
+                expectedStatus: { $ref: '#/components/schemas/OrderStatus' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Order' } } } }
+        '409': { $ref: '#/components/responses/Error' }
+  /admin/summary/today:
+    get:
+      tags: [admin]
+      summary: Today's order count and sales (PKT business day, cancelled excluded)
+      security: [{ session: [] }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/TodaySummary' } } } }
+  /admin/menu-items:
+    get:
+      tags: [admin]
+      summary: All items including hidden
+      security: [{ session: [] }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminMenuItem' } } } } }
+  /admin/menu-items/{slug}:
+    patch:
+      tags: [admin]
+      summary: Edit price, availability, sold-out (past orders unaffected)
+      security: [{ session: [] }]
+      parameters:
+        - { name: slug, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                basePrice: { type: integer, minimum: 1, maximum: 100000 }
+                available: { type: boolean }
+                soldOut: { type: boolean }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AdminMenuItem' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+  /admin/delivery-areas:
+    get:
+      tags: [admin]
+      summary: All areas including disabled
+      security: [{ session: [] }]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminArea' } } } } }
+    post:
+      tags: [admin]
+      summary: Add an area
+      security: [{ session: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/AdminArea' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/AdminArea' } } } }
+        '409': { $ref: '#/components/responses/Error' }
+  /admin/delivery-areas/{id}:
+    patch:
+      tags: [admin]
+      summary: Edit name, fee, enabled, order (id immutable)
+      security: [{ session: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              minProperties: 1
+              properties:
+                name: { type: string, minLength: 2, maxLength: 40 }
+                fee: { type: integer, minimum: 0, maximum: 2000 }
+                enabled: { type: boolean }
+                order: { type: integer }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AdminArea' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /admin/contact-messages:
+    get:
+      tags: [admin]
+      summary: Messages newest first
+      security: [{ session: [] }]
+      parameters:
+        - { name: unread, in: query, schema: { type: boolean } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ContactMessage' } } } } }
+  /admin/contact-messages/{id}:
+    patch:
+      tags: [admin]
+      summary: Mark read/unread
+      security: [{ session: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, required: [isRead], properties: { isRead: { type: boolean } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ContactMessage' } } } }
+  /admin/newsletter-subscribers:
+    get:
+      tags: [admin]
+      summary: Newsletter sign-ups newest first
+      security: [{ session: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { type: object, properties: { email: { type: string }, createdAt: { type: string, format: date-time } } }
+  /admin/reviews:
+    get:
+      tags: [admin]
+      summary: Reviews (default pending first)
+      security: [{ session: [] }]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [pending, approved, rejected] } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AdminReview' } } } } }
+  /admin/reviews/{id}:
+    patch:
+      tags: [admin]
+      summary: Approve or reject
+      security: [{ session: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: false, required: [status], properties: { status: { type: string, enum: [approved, rejected] } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AdminReview' } } } }
+
+  # ---------- Ops ----------
+  /healthz:
+    get:
+      summary: Liveness + database ping (not rate limited)
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, properties: { status: { const: ok } } } } } }
+        '503': { $ref: '#/components/responses/Error' }

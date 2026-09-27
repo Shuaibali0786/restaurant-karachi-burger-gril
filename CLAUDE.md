@@ -1,4 +1,4 @@
-# Claude Code Rules
+﻿# Claude Code Rules
 
 This file is generated during init for the selected agent.
 
@@ -212,6 +212,9 @@ See `.specify/memory/constitution.md` for code quality, testing, performance, se
 ## Active Technologies
 - 001-restaurant-frontend: TypeScript (strict) · Next.js 16.3 App Router (Turbopack) · React 19.3 · Tailwind CSS 4.3 (`@theme` tokens) · motion 13 (Framer Motion) · Zustand 5 persist (localStorage) · React Hook Form 7 + Zod 4 · lucide-react 1.x (no brand icons) · Vitest 5 · Playwright 1.63
 - Frontend lives in `frontend/`; components read data only via `frontend/src/lib/api.ts`
+- 002-restaurant-backend: Python 3.12+ (uv) · FastAPI (`/api/v1`, docs at `/docs`) · SQLModel (sync) + Alembic · psycopg 3 · Neon Postgres (Singapore; pooled `DATABASE_URL`, direct `DATABASE_URL_DIRECT`, `test` branch for pytest) · pwdlib Argon2 + PyJWT in httpOnly `kbg_session` cookie · slowapi + `limits` · tzdata (Asia/Karachi) · pytest + httpx · ruff + mypy
+- Backend lives in `backend/` (routes → services → models; pricing only in `app/services/pricing.py`); browser reaches it same-origin via the Next.js `/api/*` rewrite (ADR-0002)
 
 ## Recent Changes
+- 002-restaurant-backend: plan, research (R1–R14), data model, OpenAPI + frontend-api contracts, quickstart in `specs/002-restaurant-backend/`; ADR-0001…0004 in `history/adr/`
 - 001-restaurant-frontend: plan, research, data model and contracts in `specs/001-restaurant-frontend/`
