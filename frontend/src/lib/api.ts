@@ -1,8 +1,8 @@
 /**
  * The single data entry point for screens and components (Constitution IX).
- * Menu reads (this file's `get*` menu functions) now call the FastAPI backend
- * through `lib/http.ts`; ordering, accounts and reviews still use mock data
- * until their own phases land. See specs/002-restaurant-backend/contracts/frontend-api.md.
+ * Menu, ordering and tracking (this file's `get*`/`placeOrder` functions) now call the FastAPI
+ * backend through `lib/http.ts`; accounts and reviews still use mock data until their own phases
+ * land. See specs/002-restaurant-backend/contracts/frontend-api.md.
  */
 import { site } from "@/lib/data/site";
 import { testimonials } from "@/lib/data/testimonials";
@@ -90,18 +90,44 @@ export async function placeOrder(input: PlaceOrderInput, opts: { idempotencyKey?
     body: input,
     headers: { "Idempotency-Key": idempotencyKey },
   });
-  saveOrder(order); // keeps "My orders on this device" working until it reads from the API (User Story 3)
+  // The device keeps its own copy so a guest (no account yet) can still see their own phone and
+  // address on "My orders on this device" — the public API answer alone would mask them.
+  saveOrder(order);
   return order;
 }
 
-/** An order placed on this device, or null. */
+/**
+ * The order's live status from the server (research R12: masked for anyone who isn't the account
+ * that placed it or an admin). For a guest's own order, this device's saved copy — written at
+ * placement — fills back in the phone and address the public answer omits, while the status
+ * itself always comes from the server. Falls back to the local copy on a network error, and to
+ * `null` for an id this device has never heard of and the server doesn't know either.
+ */
 export async function getOrder(id: string): Promise<Order | null> {
-  return loadOrder(id);
+  const local = loadOrder(id);
+  let remote: Order;
+  try {
+    remote = await request<Order>(`/orders/${encodeURIComponent(id)}`);
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "NOT_FOUND") return local; // a Phase 1-era, device-only order
+    return local ?? Promise.reject(error);
+  }
+
+  const merged: Order =
+    remote.viewer === "public" && local
+      ? { ...remote, customer: local.customer, delivery: { ...remote.delivery, address: local.delivery.address, landmark: local.delivery.landmark } }
+      : remote;
+  saveOrder(merged); // keeps the locally cached status fresh for the "Orders on this device" list too
+  return merged;
 }
 
-/** Orders placed on this device, newest first (Track Order page). */
+/** Up to 10 orders placed on this device, newest first, with their current status (Track Order page). */
 export async function getRecentOrders(): Promise<Order[]> {
-  return loadOrders();
+  const ids = loadOrders()
+    .slice(0, 10)
+    .map((order) => order.id);
+  const orders = await Promise.all(ids.map((id) => getOrder(id)));
+  return orders.filter((order): order is Order => order !== null);
 }
 
 /*

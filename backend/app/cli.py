@@ -1,8 +1,9 @@
 """Command line tools. Run from backend/:  uv run python -m app.cli <command>
 
-seed [--reset-menu]   load categories, the 33 menu items, promos, delivery areas and sample reviews
-create-admin          create the first admin from ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME in .env
-check-db              verify the database connection (prints no secrets)
+seed [--reset-menu]     load categories, the 33 menu items, promos, delivery areas and sample reviews
+create-admin            create the first admin from ADMIN_EMAIL / ADMIN_PASSWORD / ADMIN_NAME in .env
+set-order-status        move an order to its next status, or cancel it (stand-in for the admin panel)
+check-db                verify the database connection (prints no secrets)
 """
 
 import argparse
@@ -14,8 +15,10 @@ from sqlmodel import Session, select
 
 from app.core.config import get_settings
 from app.core.db import get_engine
+from app.core.errors import AppError
 from app.core.security import hash_password
-from app.models import User
+from app.models import Order, User
+from app.services import orders as orders_service
 from app.services import seed
 
 MIN_ADMIN_PASSWORD_LENGTH = 12
@@ -76,6 +79,21 @@ def cmd_create_admin(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_set_order_status(args: argparse.Namespace) -> int:
+    with Session(get_engine()) as session:
+        order = session.exec(select(Order).where(Order.number == args.number)).first()
+        if order is None:
+            print(f"FAILED: no order KBG-{args.number}.")
+            return 1
+        try:
+            updated = orders_service.change_status(session, order, args.status, changed_by=None)
+        except AppError as error:
+            print(f"FAILED: {error.message}")
+            return 1
+    print(f"OK: {updated.id} is now {updated.status}.")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.cli", description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -88,6 +106,12 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("create-admin", help="create the first admin from .env (safe to re-run)").set_defaults(
         func=cmd_create_admin
     )
+    status_parser = sub.add_parser(
+        "set-order-status", help="move an order forward one step, or cancel it (stand-in for the admin panel)"
+    )
+    status_parser.add_argument("number", type=int, help="the order number, e.g. 10234 for KBG-10234")
+    status_parser.add_argument("status", choices=["preparing", "on-the-way", "delivered", "cancelled"])
+    status_parser.set_defaults(func=cmd_set_order_status)
     args = parser.parse_args(argv)
     return int(args.func(args))
 

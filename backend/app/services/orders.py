@@ -54,6 +54,19 @@ def option_summary(label: str, includes: str | None) -> str:
     return f"{label} ({includes})" if includes else label
 
 
+def mask_phone(phone: str) -> str:
+    """+923001234567 -> "+92 3.. ... ..67": only the first and last two digits are shown
+    (research R12). `phone` is always the normalised +923XXXXXXXXX form."""
+    local = phone.removeprefix("+92")
+    dot = "•"
+    return f"+92 {local[0]}{dot}{dot} {dot}{dot}{dot} {dot}{dot}{local[8]}{local[9]}"
+
+
+# Forward-only transitions (data-model.md); cancellation is allowed from any non-terminal status.
+_NEXT_STATUS = {"confirmed": "preparing", "preparing": "on-the-way", "on-the-way": "delivered"}
+_TERMINAL_STATUSES = {"delivered", "cancelled"}
+
+
 @dataclass(frozen=True)
 class _OrderableItem:
     """A menu item's full pricing + labelling data, used to validate a cart and snapshot its lines."""
@@ -165,14 +178,17 @@ def _order_to_out(order: Order, lines: list[OrderLine], events: list[OrderStatus
     timing: TimingOut = (
         TimingScheduledOut(slot=order.scheduled_for) if order.timing_type == "scheduled" else TimingAsapOut()
     )
+    is_public = viewer == "public"
     return OrderOut(
         id=f"KBG-{order.number}",
-        customer=OrderCustomerOut(name=order.customer_name, phone=order.customer_phone),
+        customer=OrderCustomerOut(
+            name=order.customer_name, phone=mask_phone(order.customer_phone) if is_public else order.customer_phone
+        ),
         delivery=OrderDeliveryOut(
             area=order.area_id,
             area_name=order.area_name,
-            address=order.address,
-            landmark=order.landmark,
+            address=None if is_public else order.address,
+            landmark=None if is_public else order.landmark,
             notes=order.notes,
         ),
         timing=timing,
@@ -203,7 +219,7 @@ def _order_to_out(order: Order, lines: list[OrderLine], events: list[OrderStatus
     )
 
 
-def _load_order_bundle(session: Session, order: Order) -> OrderOut:
+def _load_order_bundle(session: Session, order: Order, *, viewer: str = "owner") -> OrderOut:
     lines = sorted(
         session.exec(select(OrderLine).where(OrderLine.order_id == order.id)).all(), key=lambda line: line.position
     )
@@ -211,7 +227,7 @@ def _load_order_bundle(session: Session, order: Order) -> OrderOut:
         session.exec(select(OrderStatusEvent).where(OrderStatusEvent.order_id == order.id)).all(),
         key=lambda e: e.changed_at,  # type: ignore[arg-type,return-value]
     )
-    return _order_to_out(order, lines, events, viewer="owner")
+    return _order_to_out(order, lines, events, viewer=viewer)
 
 
 def place_order(
@@ -335,3 +351,52 @@ def place_order(
     session.refresh(order)
 
     return _load_order_bundle(session, order), True
+
+
+def get_order_view(session: Session, number: int, viewer_user: User | None) -> OrderOut:
+    """The order with live status. `viewer` decides what is visible (research R12): the account
+    that placed it, or an admin, sees full contact and delivery details; anyone else (including a
+    guest who placed it, once their session cookie is gone) sees a masked phone and no address."""
+    order = session.exec(select(Order).where(Order.number == number)).first()
+    if order is None:
+        raise AppError("NOT_FOUND", "We couldn't find that order.")
+
+    if viewer_user is not None and viewer_user.role == "admin":
+        viewer = "admin"
+    elif viewer_user is not None and order.user_id == viewer_user.id:
+        viewer = "owner"
+    else:
+        viewer = "public"
+
+    return _load_order_bundle(session, order, viewer=viewer)
+
+
+def change_status(session: Session, order: Order, new_status: str, *, changed_by: uuid.UUID | None) -> OrderOut:
+    """Moves an order forward one step, or to `cancelled` from any non-terminal status (data-model.md
+    state machine). `changed_by` is the admin's user id, or None for a system/CLI change."""
+    if order.status in _TERMINAL_STATUSES:
+        raise AppError(
+            "INVALID_TRANSITION",
+            f"This order is already {order.status} and cannot be changed.",
+            details={"currentStatus": order.status},
+        )
+    if new_status != "cancelled" and _NEXT_STATUS.get(order.status) != new_status:
+        raise AppError(
+            "INVALID_TRANSITION",
+            f"An order cannot move from {order.status} to {new_status}.",
+            details={"currentStatus": order.status},
+        )
+
+    now = clock.now()
+    from_status = order.status
+    order.status = new_status
+    order.updated_at = now
+    session.add(order)
+    session.add(
+        OrderStatusEvent(
+            order_id=order.id, from_status=from_status, to_status=new_status, changed_by=changed_by, changed_at=now
+        )
+    )
+    session.commit()
+    session.refresh(order)
+    return _load_order_bundle(session, order)

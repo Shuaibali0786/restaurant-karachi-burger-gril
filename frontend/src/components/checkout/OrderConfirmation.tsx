@@ -60,7 +60,7 @@ export function OrderConfirmation({ id }: { id: string }) {
         <EmptyState
           icon={<SearchX aria-hidden="true" className="size-9" />}
           title="Order not found"
-          text={`We couldn't find order ${id} on this device. Orders are saved in the browser you ordered from.`}
+          text={`We couldn't find order ${id}. Please check the order number and try again.`}
           action={<ButtonLink href="/menu" size="lg">Browse menu</ButtonLink>}
         />
       </div>
@@ -71,10 +71,19 @@ export function OrderConfirmation({ id }: { id: string }) {
   const arrival = estimatedArrival(order);
   const scheduled = order.timing.type === "scheduled";
   const firstName = order.customer.name.split(" ")[0];
+  // A masked phone (public viewer) is already meant for display; formatPhone would mangle it.
+  const contactPhone = order.viewer === "public" ? order.customer.phone : formatPhone(order.customer.phone);
 
   const details = [
-    { Icon: MapPin, label: "Deliver to", value: [order.delivery.address, order.delivery.areaName].join(", "), extra: order.delivery.landmark && `Landmark: ${order.delivery.landmark}` },
-    { Icon: Phone, label: "Contact", value: `${order.customer.name} · ${formatPhone(order.customer.phone)}` },
+    order.delivery.address
+      ? {
+          Icon: MapPin,
+          label: "Deliver to",
+          value: [order.delivery.address, order.delivery.areaName].join(", "),
+          extra: order.delivery.landmark && `Landmark: ${order.delivery.landmark}`,
+        }
+      : { Icon: MapPin, label: "Delivery area", value: order.delivery.areaName },
+    { Icon: Phone, label: "Contact", value: `${order.customer.name} · ${contactPhone}` },
     { Icon: Wallet, label: "Payment", value: "Cash on Delivery", extra: `Please keep ${formatRs(order.totals.total)} ready for the rider` },
     ...(order.delivery.notes ? [{ Icon: Info, label: "Delivery notes", value: order.delivery.notes }] : []),
   ];
@@ -115,11 +124,8 @@ export function OrderConfirmation({ id }: { id: string }) {
           <section aria-labelledby="tracker-title" className="rounded-card bg-white p-5 shadow-card ring-1 ring-cream-200 sm:p-8">
             <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
               <h2 id="tracker-title" className="font-display text-3xl font-black text-ink-900">Track your order</h2>
-              <p className="rounded-full bg-cream-100 px-3 py-1 text-xs font-bold text-ink-600 ring-1 ring-cream-200">
-                Demo tracker · live tracking coming soon
-              </p>
             </div>
-            <OrderTracker order={order} />
+            <OrderTracker id={order.id} initialOrder={order} />
           </section>
 
           <div className="grid items-start gap-6 lg:grid-cols-2">

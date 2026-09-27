@@ -7,17 +7,21 @@ import { ChevronRight, Search } from "lucide-react";
 import type { Order } from "@/lib/types";
 import { getOrder, getRecentOrders } from "@/lib/api";
 import { formatRs } from "@/lib/format";
-import { ORDER_STAGES, orderStageIndex } from "@/lib/orders";
+import { ORDER_STAGES, stageIndexFor } from "@/lib/orders";
 import { formatPktTime } from "@/lib/time";
-import { useNow } from "@/hooks/useNow";
 import { buttonClasses } from "@/components/ui/Button";
 import { inputClass } from "@/components/forms/Field";
+
+/** The label shown for an order's current status in the "on this device" list. */
+function stageLabel(order: Order): string {
+  if (order.status === "cancelled") return "Cancelled";
+  return ORDER_STAGES[stageIndexFor(order.status)]!.label;
+}
 
 /** Find an order by number, or pick one of the orders placed on this device. */
 export function TrackOrder() {
   const router = useRouter();
   const uid = useId();
-  const now = useNow(5_000);
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +39,7 @@ export function TrackOrder() {
       return;
     }
     if (!(await getOrder(id))) {
-      setError(`We couldn't find ${id} on this device. Orders are saved in the browser you ordered from.`);
+      setError(`We couldn't find ${id}. Please check the order number and try again.`);
       return;
     }
     router.push(`/order/${id}`);
@@ -91,7 +95,7 @@ export function TrackOrder() {
         ) : (
           <ul className="mt-4 space-y-2">
             {orders.map((order) => {
-              const stage = now ? ORDER_STAGES[orderStageIndex(order, now)]!.label : "…";
+              const stage = stageLabel(order);
               return (
                 <li key={order.id}>
                   <Link
