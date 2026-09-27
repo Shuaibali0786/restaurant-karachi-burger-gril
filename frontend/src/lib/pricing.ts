@@ -103,14 +103,14 @@ export function resolveCart(lines: readonly CartLine[], items: readonly MenuItem
 }
 
 /**
- * Subtotal before deals, deal discount, delivery (Rs 150, free when the amount
- * after discount is Rs 1,500 or more) and total.
+ * Subtotal before deals, deal discount, delivery (the chosen area's fee, Rs 150 by default, free
+ * when the amount after discount is Rs 1,500 or more) and total.
  */
-export function cartTotals(lines: readonly ResolvedLine[]): CartTotals {
+export function cartTotals(lines: readonly ResolvedLine[], deliveryFee: number = DELIVERY_FEE): CartTotals {
   const subtotal = lines.reduce((sum, l) => sum + l.unitPrice * l.line.quantity, 0);
   const discount = lines.reduce((sum, l) => sum + l.discountPerUnit * l.line.quantity, 0);
   const afterDiscount = subtotal - discount;
-  const delivery = lines.length === 0 || afterDiscount >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  const delivery = lines.length === 0 || afterDiscount >= FREE_DELIVERY_THRESHOLD ? 0 : deliveryFee;
 
   return {
     subtotal,

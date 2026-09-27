@@ -7,6 +7,7 @@ import { ArrowLeft, Loader2, Lock } from "lucide-react";
 import type { DeliveryAreaOption, MenuItemView, Order } from "@/lib/types";
 import { formatRs } from "@/lib/format";
 import { optionSummary } from "@/lib/menu";
+import { cartTotals, DELIVERY_FEE } from "@/lib/pricing";
 import { useCartView } from "@/hooks/useCartView";
 import { useCart } from "@/stores/cart";
 import { buttonClasses } from "@/components/ui/Button";
@@ -23,9 +24,14 @@ export function CheckoutView({ items, areas }: CheckoutViewProps) {
   const router = useRouter();
   const rawLines = useCart((state) => state.lines);
   const clearCart = useCart((state) => state.clear);
-  const { ready, lines, totals, promoEnded } = useCartView(items);
+  const { ready, lines, promoEnded } = useCartView(items);
   const [submitting, setSubmitting] = useState(false);
   const [placed, setPlaced] = useState(false);
+  const [areaId, setAreaId] = useState<string | null>(null);
+
+  // Re-priced with the chosen area's delivery fee (FR-007); the server has the final say at order time.
+  const deliveryFee = areas.find((area) => area.id === areaId)?.fee ?? DELIVERY_FEE;
+  const totals = cartTotals(lines, deliveryFee);
 
   const onPlaced = (order: Order) => {
     setPlaced(true);
@@ -55,7 +61,14 @@ export function CheckoutView({ items, areas }: CheckoutViewProps) {
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[1fr_24rem]">
-      <CheckoutForm areas={areas} lines={rawLines} onPlaced={onPlaced} onSubmittingChange={setSubmitting} />
+      <CheckoutForm
+        areas={areas}
+        items={items}
+        lines={rawLines}
+        onPlaced={onPlaced}
+        onSubmittingChange={setSubmitting}
+        onAreaChange={setAreaId}
+      />
 
       <aside aria-label="Order summary" className="rounded-card bg-cream-100/70 p-5 ring-1 ring-cream-200 lg:sticky lg:top-28">
         <div className="flex items-baseline justify-between">

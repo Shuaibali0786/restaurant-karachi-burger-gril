@@ -33,7 +33,8 @@ class CategoryShape:
     addons: tuple[CategoryAddon, ...]
 
 
-def _load_category_shapes(session: Session) -> dict[str, CategoryShape]:
+def load_category_shapes(session: Session) -> dict[str, CategoryShape]:
+    """Public: also used by services/orders.py to build the pricing catalogue and line snapshots."""
     # Sorted in Python: mypy's SQLModel stubs don't accept a plain `int` column in `.order_by()`,
     # and these tables are small (8 categories, a few dozen options/add-ons), so this costs nothing.
     categories = sorted(session.exec(select(Category)).all(), key=lambda c: c.sort_order)
@@ -77,7 +78,7 @@ def _build_view(item: MenuItem, shape: CategoryShape) -> MenuItemViewOut:
 
 
 def list_categories(session: Session) -> list[CategoryOut]:
-    shapes = _load_category_shapes(session)
+    shapes = load_category_shapes(session)
     return [
         CategoryOut(
             id=shape.category.id,
@@ -116,7 +117,7 @@ def list_items(
     include_hidden: bool = False,
 ) -> list[MenuItemViewOut]:
     """Available (or, for admin, every) item, filtered, searched and sorted like the frontend."""
-    shapes = _load_category_shapes(session)
+    shapes = load_category_shapes(session)
     query = select(MenuItem)
     if category is not None:
         query = query.where(MenuItem.category_id == category)
@@ -144,7 +145,7 @@ def get_item(session: Session, slug: str) -> MenuItemViewOut | None:
     item = session.exec(select(MenuItem).where(MenuItem.slug == slug)).first()
     if item is None:
         return None
-    shapes = _load_category_shapes(session)
+    shapes = load_category_shapes(session)
     return _build_view(item, shapes[item.category_id])
 
 

@@ -42,3 +42,19 @@ export async function addViaItemView(page: Page, itemName: string, option: strin
   await dialog.getByRole("button", { name: /^Add to cart/ }).click();
   await expect(page.locator("dialog[open]")).toHaveCount(0);
 }
+
+/**
+ * Picks whichever delivery time the real backend will actually accept right now (ASAP, or the
+ * first scheduled slot when the restaurant is closed) — the checkout form already disables ASAP
+ * outside opening hours, and the server is the final judge of both (FR-008).
+ */
+export async function completeDeliveryTiming(page: Page) {
+  const asap = page.getByRole("radio", { name: "As soon as possible" });
+  if (await asap.isEnabled()) {
+    await page.locator("label", { has: asap }).click();
+    return;
+  }
+  const scheduled = page.getByRole("radio", { name: "Schedule for later today" });
+  await page.locator("label", { has: scheduled }).click();
+  await page.getByLabel("Delivery time").selectOption({ index: 1 });
+}

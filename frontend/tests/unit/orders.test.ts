@@ -1,8 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getOrder, placeOrder } from "@/lib/api";
-import { ApiError } from "@/lib/api-error";
 import { DEMO_STAGE_MS, estimatedArrival, generateOrderId, orderStageIndex, orderStatus } from "@/lib/orders";
-import type { PlaceOrderInput } from "@/lib/types";
+import type { Order, PlaceOrderInput } from "@/lib/types";
+
+// placeOrder's own business rules (pricing, opening hours, sold-out items, area validation, ...) now
+// live on the server and are proven there (backend/tests/integration/test_orders_api.py); here we
+// only check what stays on this side of the wire: the idempotency key and saving the reply locally
+// so "My orders on this device" and the confirmation page can read it back (see lib/local-orders.ts).
 
 const input: PlaceOrderInput = {
   customer: { name: "Ayesha Khan", phone: "0300-1234567" },
@@ -14,26 +18,67 @@ const input: PlaceOrderInput = {
   ],
 };
 
+const serverOrder: Order = {
+  id: "KBG-10042",
+  customer: { name: "Ayesha Khan", phone: "+923001234567" },
+  delivery: { area: "clifton", areaName: "Clifton", address: input.delivery.address, landmark: input.delivery.landmark },
+  timing: { type: "asap" },
+  payment: "cod",
+  lines: [
+    {
+      itemSlug: "burns-road-zinger",
+      name: "Burns Road Zinger",
+      optionId: "double",
+      optionLabel: "Double",
+      addonIds: ["extra-cheese"],
+      addonLabels: ["Extra cheese"],
+      note: "No onions",
+      quantity: 2,
+      unitPrice: 1090,
+      discount: 0,
+      lineTotal: 2180,
+    },
+  ],
+  totals: { subtotal: 2180, discount: 0, delivery: 0, total: 2180 },
+  placedAt: "2026-09-30T15:00:00.000Z",
+  status: "confirmed",
+  statusHistory: [{ status: "confirmed", at: "2026-09-30T15:00:00.000Z" }],
+  viewer: "owner",
+};
+
+afterEach(() => vi.unstubAllGlobals());
+
 describe("placeOrder", () => {
-  it("re-prices from the menu, snapshots lines and can be read back", async () => {
+  it("sends an Idempotency-Key header and saves the server's order locally", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(serverOrder), { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+
     const order = await placeOrder(input);
-    expect(order.id).toMatch(/^KBG-\d{5}$/);
-    expect(order.customer.phone).toBe("+923001234567");
-    expect(order.delivery.areaName).toBe("Clifton");
-    expect(order.lines[0]).toMatchObject({ name: "Burns Road Zinger", optionLabel: "Double", addonLabels: ["Extra cheese"], unitPrice: 1090, lineTotal: 2180 });
-    expect(order.totals).toEqual({ subtotal: 2180, discount: 0, delivery: 0, total: 2180 });
+    expect(order).toEqual(serverOrder);
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const key = (init.headers as Record<string, string>)["Idempotency-Key"];
+    expect(key).toMatch(/^[0-9a-f-]{36}$/);
+
     expect(await getOrder(order.id)).toEqual(order);
   });
 
-  it("rejects an empty cart, bad details and items no longer on the menu", async () => {
-    await expect(placeOrder({ ...input, lines: [] })).rejects.toMatchObject({ code: "EMPTY_CART" });
-    await expect(placeOrder({ ...input, customer: { name: "Ayesha", phone: "021-1234567" } })).rejects.toBeInstanceOf(ApiError);
-    await expect(
-      placeOrder({ ...input, lines: [{ ...input.lines[0]!, itemSlug: "retired-burger" }] }),
-    ).rejects.toMatchObject({ code: "UNKNOWN_ITEM" });
+  it("reuses the same idempotency key across retries from the same call site", async () => {
+    const keys: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+        keys.push((init.headers as Record<string, string>)["Idempotency-Key"] ?? "");
+        return Promise.resolve(new Response(JSON.stringify(serverOrder), { status: 201 }));
+      }),
+    );
+    const key = crypto.randomUUID();
+    await placeOrder(input, { idempotencyKey: key });
+    await placeOrder(input, { idempotencyKey: key });
+    expect(keys).toEqual([key, key]);
   });
 
-  it("returns null for an order that doesn't exist", async () => {
+  it("returns null for an order that doesn't exist on this device", async () => {
     expect(await getOrder("KBG-00000")).toBeNull();
   });
 });

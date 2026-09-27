@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { normalizePkMobile } from "@/lib/phone";
-import type { DeliveryArea } from "@/lib/types";
 
 /**
  * Pakistani mobile number: 03XX-XXXXXXX, +92 3XX XXXXXXX, 0092…, or 92…
@@ -22,13 +21,13 @@ const optionalText = (max: number, label: string) =>
     .max(max, `${label} can be up to ${max} characters`)
     .transform((value) => value || undefined);
 
-export const deliveryAreaIds = ["saddar", "clifton", "dha", "pechs", "gulshan", "north-nazimabad"] as const satisfies readonly DeliveryArea[];
-
 export const checkoutSchema = z
   .object({
     name,
     phone: pkMobile,
-    area: z.enum(deliveryAreaIds, { error: "Choose your delivery area" }),
+    // The valid set of areas comes from the database (staff can add or disable one); the server has
+    // the final say and refuses an unknown or disabled area with AREA_UNAVAILABLE.
+    area: z.string().min(1, "Choose your delivery area"),
     address: z
       .string()
       .trim()

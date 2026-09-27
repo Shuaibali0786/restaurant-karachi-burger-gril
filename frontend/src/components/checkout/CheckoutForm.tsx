@@ -1,10 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Banknote, CalendarClock, ChevronDown, CircleAlert, CreditCard, Smartphone, Zap } from "lucide-react";
-import type { CartLine, DeliveryAreaOption, Order } from "@/lib/types";
+import type { CartLine, DeliveryAreaOption, MenuItemView, Order } from "@/lib/types";
 import { ApiError } from "@/lib/api-error";
 import { placeOrder } from "@/lib/api";
 import { formatPktTime, isOpenNow, scheduleSlots } from "@/lib/time";
@@ -12,6 +13,17 @@ import { checkoutSchema, pkMobile, type CheckoutFormInput, type CheckoutFormValu
 import { useNow } from "@/hooks/useNow";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
 import { describedBy, Field, FormSection, inputClass } from "@/components/forms/Field";
+
+/** Server field paths (contracts/openapi.yaml) mapped to this form's own field names. */
+const SERVER_FIELD_MAP: Partial<Record<string, keyof CheckoutFormValues>> = {
+  "customer.name": "name",
+  "customer.phone": "phone",
+  "delivery.area": "area",
+  "delivery.address": "address",
+  "delivery.landmark": "landmark",
+  "delivery.notes": "notes",
+  "timing.slot": "scheduledFor",
+};
 
 export const CHECKOUT_FORM_ID = "checkout-form";
 
@@ -34,21 +46,29 @@ function tidyPhone(value: string): string {
 
 interface CheckoutFormProps {
   areas: DeliveryAreaOption[];
+  items: MenuItemView[];
   lines: CartLine[];
   onPlaced: (order: Order) => void;
   onSubmittingChange: (submitting: boolean) => void;
+  /** Reports the chosen area's id as soon as the customer picks one, so the summary can price its fee. */
+  onAreaChange: (areaId: string | null) => void;
 }
 
-export function CheckoutForm({ areas, lines, onPlaced, onSubmittingChange }: CheckoutFormProps) {
+export function CheckoutForm({ areas, items, lines, onPlaced, onSubmittingChange, onAreaChange }: CheckoutFormProps) {
   const uid = useId();
   const id = (name: string) => `${uid}-${name}`;
   const now = useNow(60_000);
+  const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
+  // One id per checkout attempt (this form mount), reused on every retry so a double submission —
+  // a double tap, or a resubmit after a network error — can never create two orders (research R4).
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   const {
     register,
     handleSubmit,
     setValue,
+    setError,
     control,
     formState: { errors, isSubmitted },
   } = useForm<CheckoutFormInput, unknown, CheckoutFormValues>({
@@ -67,6 +87,7 @@ export function CheckoutForm({ areas, lines, onPlaced, onSubmittingChange }: Che
   });
 
   const deliveryTime = useWatch({ control, name: "deliveryTime" });
+  const areaId = useWatch({ control, name: "area" });
   const openNow = now ? isOpenNow(now) : true;
   const slots = now ? scheduleSlots(now) : [];
   const errorCount = Object.keys(errors).length;
@@ -76,21 +97,88 @@ export function CheckoutForm({ areas, lines, onPlaced, onSubmittingChange }: Che
     if (!openNow && deliveryTime === "asap") setValue("deliveryTime", "scheduled");
   }, [openNow, deliveryTime, setValue]);
 
+  // The order summary prices the chosen area's delivery fee (spec FR-007) as soon as it's picked.
+  useEffect(() => {
+    onAreaChange(areaId || null);
+  }, [areaId, onAreaChange]);
+
+  const nameOf = (slug: string) => items.find((item) => item.slug === slug)?.name ?? slug;
+
   const onSubmit = async (values: CheckoutFormValues) => {
     setFormError(null);
     onSubmittingChange(true);
     try {
-      const order = await placeOrder({
-        customer: { name: values.name, phone: values.phone },
-        delivery: { area: values.area, address: values.address, landmark: values.landmark, notes: values.notes },
-        timing: values.scheduledFor ? { type: "scheduled", slot: values.scheduledFor } : { type: "asap" },
-        payment: "cod",
-        lines,
-      });
+      const order = await placeOrder(
+        {
+          customer: { name: values.name, phone: values.phone },
+          delivery: { area: values.area, address: values.address, landmark: values.landmark, notes: values.notes },
+          timing: values.scheduledFor ? { type: "scheduled", slot: values.scheduledFor } : { type: "asap" },
+          payment: "cod",
+          // Drop the cart's own `key` field: the server's schema forbids fields it doesn't expect.
+          lines: lines.map(({ itemSlug, optionId, addonIds, note, quantity, addedAt }) => ({
+            itemSlug,
+            optionId,
+            addonIds,
+            note,
+            quantity,
+            addedAt,
+          })),
+        },
+        { idempotencyKey },
+      );
       onPlaced(order);
+      return;
     } catch (error) {
-      setFormError(error instanceof ApiError ? error.message : "Something went wrong placing your order. Please try again.");
       onSubmittingChange(false);
+      if (!(error instanceof ApiError)) {
+        setFormError("Something went wrong placing your order. Please try again.");
+        return;
+      }
+
+      switch (error.code) {
+        case "ITEM_SOLD_OUT":
+        case "UNKNOWN_ITEM": {
+          const names = (error.details?.items as string[] | undefined)?.map(nameOf) ?? [];
+          const list = names.join(", ");
+          setFormError(
+            list
+              ? `${list} ${names.length > 1 ? "are" : "is"} no longer available. Please remove ${names.length > 1 ? "them" : "it"} from your cart and try again.`
+              : error.message,
+          );
+          break;
+        }
+        case "RESTAURANT_CLOSED": {
+          const opensAt = error.details?.opensAt as string | undefined;
+          setValue("deliveryTime", "scheduled");
+          setFormError(
+            `We're closed right now — we open at ${opensAt ? formatPktTime(new Date(opensAt)) : "12 noon"} Pakistan time. Please schedule your order for later instead.`,
+          );
+          break;
+        }
+        case "AREA_UNAVAILABLE":
+          setFormError("That delivery area is no longer available. Please choose another from the list.");
+          router.refresh(); // re-fetches the delivery area list from the server
+          break;
+        case "INVALID_SLOT":
+          setFormError("That delivery time is no longer available. Please pick another time below.");
+          break;
+        case "VALIDATION_FAILED": {
+          let mapped = false;
+          for (const [path, message] of Object.entries(error.fields ?? {})) {
+            const fieldName = SERVER_FIELD_MAP[path];
+            if (fieldName) {
+              setError(fieldName, { type: "server", message });
+              mapped = true;
+            }
+          }
+          setFormError(mapped ? "Please fix the highlighted details." : error.message);
+          break;
+        }
+        default:
+          // RATE_LIMITED, NETWORK, IDEMPOTENCY_CONFLICT, INTERNAL, ...: the backend's own wording is
+          // already customer-friendly (e.g. "Too many attempts. Please wait a few minutes and try again.").
+          setFormError(error.message);
+      }
     }
   };
 

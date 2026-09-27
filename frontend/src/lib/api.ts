@@ -4,20 +4,11 @@
  * through `lib/http.ts`; ordering, accounts and reviews still use mock data
  * until their own phases land. See specs/002-restaurant-backend/contracts/frontend-api.md.
  */
-import { deliveryAreas } from "@/lib/data/areas";
-import { menuItems } from "@/lib/data/menu-items";
-import { promos } from "@/lib/data/promos";
 import { site } from "@/lib/data/site";
 import { testimonials } from "@/lib/data/testimonials";
 import { ApiError } from "@/lib/api-error";
-import { lineKey } from "@/lib/cart";
 import { request } from "@/lib/http";
 import { loadOrder, loadOrders, saveOrder } from "@/lib/local-orders";
-import { optionSummary } from "@/lib/menu";
-import { generateOrderId } from "@/lib/orders";
-import { cartTotals, resolveCart } from "@/lib/pricing";
-import { normalizePkMobile } from "@/lib/phone";
-import { toView } from "@/lib/menu-view";
 import type {
   Category,
   DeliveryAreaOption,
@@ -30,9 +21,6 @@ import type {
   SiteInfo,
   Testimonial,
 } from "@/lib/types";
-
-// Still backs the mock `placeOrder` below until orders move to the API (Phase 2, User Story 1).
-const views = menuItems.map(toView);
 
 export async function getSiteInfo(): Promise<SiteInfo> {
   return site;
@@ -83,64 +71,26 @@ export async function getDeliveryAreas(): Promise<DeliveryAreaOption[]> {
   return request<DeliveryAreaOption[]>("/delivery-areas", { cacheable: true });
 }
 
-/** Short, realistic pause so the checkout button's loading state is visible (browser only). */
+/** Short, realistic pause so the loading state is visible (browser only). Login/signup/contact/newsletter are still UI-only mocks. */
 const MOCK_LATENCY_MS = 700;
 const pause = () =>
   typeof window === "undefined" ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
 
 /**
- * Places a Cash-on-Delivery order. Like the future backend, it trusts no prices
- * from the client: every line is re-priced from the menu and today's deals.
+ * Places a Cash-on-Delivery order. The server re-prices every line from the menu and today's
+ * deals and enforces opening hours, delivery areas and sold-out items — it never trusts a price
+ * from this request. `idempotencyKey` should be created once per checkout attempt (the caller
+ * reuses the same key on a retry, e.g. after a network error) so a double submission never
+ * creates two orders.
  */
-export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
-  if (input.lines.length === 0) throw new ApiError("EMPTY_CART", "Your cart is empty.");
-
-  const phone = normalizePkMobile(input.customer.phone);
-  const area = deliveryAreas.find((a) => a.id === input.delivery.area);
-  if (!phone || !area || input.customer.name.trim().length < 2 || input.delivery.address.trim().length < 10) {
-    throw new ApiError("VALIDATION_FAILED", "Please check your delivery details.");
-  }
-
-  const now = new Date();
-  const cart = resolveCart(
-    input.lines.map((line) => ({ ...line, key: lineKey(line) })),
-    views,
-    promos,
-    now,
-  );
-  if (cart.invalidKeys.length > 0) {
-    throw new ApiError("UNKNOWN_ITEM", "Some items in your cart are no longer on the menu. Please review your cart.");
-  }
-
-  const totals = cartTotals(cart.lines);
-  const order: Order = {
-    id: generateOrderId(new Set(loadOrders().map((o) => o.id))),
-    customer: { name: input.customer.name.trim(), phone },
-    delivery: { ...input.delivery, areaName: area.name },
-    timing: input.timing,
-    payment: "cod",
-    lines: cart.lines.map((l) => ({
-      itemSlug: l.item.slug,
-      name: l.item.name,
-      optionId: l.option.id,
-      optionLabel: optionSummary(l.option),
-      addonIds: l.addons.map((a) => a.id),
-      addonLabels: l.addons.map((a) => a.label),
-      note: l.line.note,
-      quantity: l.line.quantity,
-      unitPrice: l.unitPrice,
-      discount: l.discountPerUnit * l.line.quantity,
-      lineTotal: l.lineTotal,
-    })),
-    totals: { subtotal: totals.subtotal, discount: totals.discount, delivery: totals.delivery, total: totals.total },
-    placedAt: now.toISOString(),
-    status: "confirmed",
-    statusHistory: [{ status: "confirmed", at: now.toISOString() }],
-    viewer: "owner",
-  };
-
-  await pause();
-  saveOrder(order);
+export async function placeOrder(input: PlaceOrderInput, opts: { idempotencyKey?: string } = {}): Promise<Order> {
+  const idempotencyKey = opts.idempotencyKey ?? crypto.randomUUID();
+  const order = await request<Order>("/orders", {
+    method: "POST",
+    body: input,
+    headers: { "Idempotency-Key": idempotencyKey },
+  });
+  saveOrder(order); // keeps "My orders on this device" working until it reads from the API (User Story 3)
   return order;
 }
 
