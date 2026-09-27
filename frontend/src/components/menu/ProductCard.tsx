@@ -1,33 +1,32 @@
-"use client";
-
 import Image from "next/image";
 import { Plus } from "lucide-react";
-import type { MenuItemView } from "@/lib/types";
+import type { MenuItemView, Promo } from "@/lib/types";
 import { cn } from "@/lib/cn";
-import { activePromoFor, promoDiscountPerUnit } from "@/lib/pricing";
-import { useNow } from "@/hooks/useNow";
-import { usePromos } from "@/stores/promos";
-import { openItem } from "@/stores/ui";
 import { Badge } from "@/components/ui/Badge";
 import { Price } from "@/components/ui/Price";
+import { DealPrice } from "@/components/menu/DealPrice";
 import { FavouriteButton } from "@/components/menu/FavouriteButton";
+import { OpenItemButton } from "@/components/menu/OpenItemButton";
+
+type WeekdayPromo = Extract<Promo, { kind: "weekday-percent" }>;
 
 interface ProductCardProps {
   item: MenuItemView;
+  /** A weekday deal on this item (e.g. Wings Wednesday); its price island decides if it's live today. */
+  deal?: WeekdayPromo | null;
+  /** Load the photo eagerly (first cards above the fold). */
+  eager?: boolean;
   className?: string;
 }
 
 /**
- * Menu card. Selecting the card or "Add +" opens the item detail modal — it
- * never adds straight to the cart (Constitution III).
+ * Menu card — rendered on the server. Only the heart, the two "open item"
+ * buttons and (for deal items) the price are interactive islands, which keeps
+ * hydration light. Selecting the card or "Add +" opens the item view; it never
+ * adds straight to the cart (Constitution III).
  */
-export function ProductCard({ item, className }: ProductCardProps) {
-  const open = () => openItem(item.slug);
+export function ProductCard({ item, deal, eager, className }: ProductCardProps) {
   const hasPaidOptions = item.options.some((option) => option.priceDelta > 0);
-  const promos = usePromos();
-  const now = useNow(30_000);
-  const deal = now ? activePromoFor(item.slug, promos, now) : null;
-  const price = item.basePrice - promoDiscountPerUnit(item.basePrice, deal);
 
   return (
     <article
@@ -42,6 +41,7 @@ export function ProductCard({ item, className }: ProductCardProps) {
           src={item.image}
           alt={item.imageAlt}
           fill
+          loading={eager ? "eager" : "lazy"}
           sizes="(min-width: 1280px) 20vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 95vw"
           className="object-cover transition duration-500 group-hover:scale-110 motion-reduce:group-hover:scale-100"
         />
@@ -51,40 +51,30 @@ export function ProductCard({ item, className }: ProductCardProps) {
 
       <div className="flex flex-1 flex-col p-4">
         <h3 className="text-base leading-snug font-extrabold text-ink-900">
-          {/* Stretched button: the whole card opens the item, heart and Add stay separately focusable. */}
-          <button
-            type="button"
-            onClick={open}
+          {/* Stretched button: the whole card opens the item; heart and Add stay separately focusable. */}
+          <OpenItemButton
+            slug={item.slug}
             className="text-left after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-flame-400"
           >
             {item.name}
-          </button>
+          </OpenItemButton>
         </h3>
         <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-600">{item.description}</p>
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-4">
-          <div>
-            {deal && (
-              <span className="mb-1 inline-block rounded-full bg-ember-500/10 px-2 py-0.5 text-xs font-bold text-ember-700">
-                {deal.title} −{deal.percent}%
-              </span>
-            )}
-            <Price
-              amount={price}
-              wasAmount={deal ? item.basePrice : undefined}
-              from={hasPaidOptions}
-              className="text-lg text-ink-900"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={open}
+          {deal ? (
+            <DealPrice basePrice={item.basePrice} deal={deal} from={hasPaidOptions} />
+          ) : (
+            <Price amount={item.basePrice} from={hasPaidOptions} className="text-lg text-ink-900" />
+          )}
+          <OpenItemButton
+            slug={item.slug}
             aria-label={`Add ${item.name}`}
             className="relative z-10 inline-flex min-h-11 items-center gap-1 rounded-full bg-flame-400 px-4 text-sm font-extrabold text-charcoal-950 transition hover:bg-ember-500"
           >
             Add
             <Plus aria-hidden="true" className="size-4" strokeWidth={3} />
-          </button>
+          </OpenItemButton>
         </div>
       </div>
     </article>

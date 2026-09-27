@@ -11,8 +11,8 @@ const values = [
 
 export function AboutTeaser() {
   return (
-    <section aria-labelledby="about-teaser-title" className="overflow-hidden bg-cream-50 py-16 sm:py-24">
-      <div className="container-page grid items-center gap-12 lg:grid-cols-2">
+    <section aria-labelledby="about-teaser-title" className="defer-paint overflow-hidden bg-cream-50 py-16 sm:py-24">
+      <div className="reveal-on-scroll container-page grid items-center gap-12 lg:grid-cols-2">
         {/* Photo collage */}
         <div className="relative mx-auto grid w-full max-w-xl grid-cols-2 gap-4">
           <div className="relative row-span-2 overflow-hidden rounded-card shadow-card">

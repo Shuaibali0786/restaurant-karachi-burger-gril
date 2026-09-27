@@ -1,6 +1,5 @@
 "use client";
 
-import { MotionConfig } from "motion/react";
 import { useEffect, type ReactNode } from "react";
 import type { Promo } from "@/lib/types";
 import { useCart } from "@/stores/cart";
@@ -16,14 +15,16 @@ function StoreHydrator() {
   return null;
 }
 
+/*
+ * Motion note (Constitution IV): page reveals, hovers, embers and transitions are
+ * CSS and respect prefers-reduced-motion in globals.css. The one JS animation —
+ * fly-to-cart — checks reduced motion itself and is loaded on demand.
+ */
 export function Providers({ promos, children }: { promos: readonly Promo[]; children: ReactNode }) {
-  // Every motion animation follows the OS "reduce motion" setting (Constitution IV).
   return (
-    <MotionConfig reducedMotion="user">
-      <PromosProvider promos={promos}>
-        <StoreHydrator />
-        {children}
-      </PromosProvider>
-    </MotionConfig>
+    <PromosProvider promos={promos}>
+      <StoreHydrator />
+      {children}
+    </PromosProvider>
   );
 }

@@ -261,7 +261,7 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
         <div
           className={cn(
             "sticky bottom-0 z-10 mt-auto border-t border-cream-200 bg-cream-50/95 backdrop-blur",
-            isModal ? "px-4 py-4 sm:px-7" : "-mx-4 mt-8 px-4 py-4 sm:mx-0 sm:rounded-card sm:px-5 lg:static lg:border-0 lg:bg-transparent lg:px-0",
+            isModal ? "px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-7" : "-mx-4 mt-8 px-4 py-4 sm:mx-0 sm:rounded-card sm:px-5 lg:static lg:border-0 lg:bg-transparent lg:px-0",
           )}
         >
           {!ready && (

@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { getCategories, getMenuItem, getMenuItems, getMenuSlugs } from "@/lib/api";
+import { getCategories, getMenuItem, getMenuItems, getMenuSlugs, getPromos } from "@/lib/api";
 import { formatRs } from "@/lib/format";
 import { ItemDetail } from "@/components/menu/ItemDetail";
 import { ProductCard } from "@/components/menu/ProductCard";
+import { dealFor } from "@/components/menu/cardMap";
 
 interface ItemPageProps {
   params: Promise<{ slug: string }>;
@@ -38,7 +39,11 @@ export default async function ItemPage({ params }: ItemPageProps) {
   const item = await getMenuItem(slug);
   if (!item) notFound();
 
-  const [categories, sameCategory] = await Promise.all([getCategories(), getMenuItems({ category: item.category })]);
+  const [categories, sameCategory, promos] = await Promise.all([
+    getCategories(),
+    getMenuItems({ category: item.category }),
+    getPromos(),
+  ]);
   const category = categories.find((c) => c.id === item.category);
   const related = sameCategory.filter((other) => other.slug !== item.slug).slice(0, 4);
 
@@ -78,7 +83,7 @@ export default async function ItemPage({ params }: ItemPageProps) {
             </h2>
             <div className="grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-4">
               {related.map((other) => (
-                <ProductCard key={other.slug} item={other} />
+                <ProductCard key={other.slug} item={other} deal={dealFor(other.slug, promos)} />
               ))}
             </div>
           </section>

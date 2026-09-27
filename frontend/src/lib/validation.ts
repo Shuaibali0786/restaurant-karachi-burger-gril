@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizePkMobile } from "@/lib/phone";
 import type { DeliveryArea } from "@/lib/types";
 
 /**
@@ -7,12 +8,10 @@ import type { DeliveryArea } from "@/lib/types";
  */
 export const pkMobile = z
   .string()
-  .trim()
-  .transform((value) => value.replace(/[\s-]/g, ""))
-  .refine((value) => /^(?:\+92|0092|92|0)3\d{9}$/.test(value), {
+  .refine((value) => normalizePkMobile(value) !== null, {
     message: "Enter a Pakistani mobile number like 0300-1234567",
   })
-  .transform((value) => `+92${value.slice(-10)}`);
+  .transform((value) => normalizePkMobile(value) as string);
 
 const name = z.string().trim().min(2, "Please enter your name").max(60, "Name is too long");
 const email = z.email("Enter a valid email address").trim();

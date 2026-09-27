@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useId } from "react";
+import { FLAME_INNER_PATH, FLAME_OUTER_PATH, FLAME_VIEWBOX } from "@/lib/brand";
 import { cn } from "@/lib/cn";
 
 /** Glowing flame rising from hot coals — the brand mark. */
@@ -10,7 +11,7 @@ export function FlameMark({ className }: { className?: string }) {
   const glow = `${id}-glow`;
 
   return (
-    <svg viewBox="0 0 48 56" aria-hidden="true" focusable="false" className={className}>
+    <svg viewBox={FLAME_VIEWBOX} aria-hidden="true" focusable="false" className={className}>
       <defs>
         <linearGradient id={outer} x1="0" y1="1" x2="0" y2="0">
           <stop offset="0%" stopColor="var(--color-ember-600)" />
@@ -30,12 +31,12 @@ export function FlameMark({ className }: { className?: string }) {
       <ellipse cx="24" cy="46" rx="24" ry="12" fill={`url(#${glow})`} />
       {/* outer flame */}
       <path
-        d="M24 2c2 7 9 11 11 19 1.6 6.4-.6 11 2.6 13.4.3-3.5 1.7-5.6 3.9-7.2C44 34 42 44 34 48.5 30.9 50.2 27.5 51 24 51s-6.9-.8-10-2.5C6 44 4 34 6.5 27.2c2.2 1.6 3.6 3.7 3.9 7.2C13.6 32 10.6 26 15 18 17.8 12.9 22.4 9.3 24 2Z"
+        d={FLAME_OUTER_PATH}
         fill={`url(#${outer})`}
       />
       {/* inner flame */}
       <path
-        d="M24 21c1.2 4.4 6.4 7.3 6.4 13.6 0 5-2.9 8.9-6.4 8.9s-6.4-3.9-6.4-8.9c0-3.5 1.8-5 3.2-7 .5 2.1 1.3 3.1 2.4 3.6-.3-3.8-.4-6.8.8-10.2Z"
+        d={FLAME_INNER_PATH}
         fill={`url(#${inner})`}
       />
       {/* coals */}

@@ -40,14 +40,10 @@ export function Hero() {
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-[radial-gradient(55%_65%_at_78%_55%,rgb(255_90_31/0.30),transparent_70%),radial-gradient(40%_50%_at_10%_10%,rgb(255_176_32/0.08),transparent_70%)]"
       />
-      <Image
-        src="/images/fire-bg.jpg"
-        alt=""
-        fill
-        preload
-        quality={75}
-        sizes="100vw"
-        className="-z-10 object-cover object-bottom opacity-20 mix-blend-screen [mask-image:linear-gradient(to_top,black,transparent_40%)]"
+      {/* Ember bed along the bottom: pure CSS, so no decorative image competes with the food photo for LCP. */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 -z-10 h-2/5 bg-[radial-gradient(40%_70%_at_20%_100%,rgb(255_90_31/0.22),transparent_70%),radial-gradient(35%_60%_at_75%_100%,rgb(255_176_32/0.16),transparent_70%),radial-gradient(60%_80%_at_50%_110%,rgb(232_72_15/0.25),transparent_75%)]"
       />
 
       <div className="container-page grid items-center gap-10 pt-8 pb-24 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-6 lg:pt-10 lg:pb-32">

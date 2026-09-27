@@ -30,7 +30,7 @@ export function MobileMenu({ id, open, onClose, links, isActive, hours }: Mobile
       onClick={onBackdropClick}
       className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-none w-[min(22rem,88vw)] max-w-none bg-charcoal-950 p-0 text-cream-50 backdrop:bg-charcoal-950/70 backdrop:backdrop-blur-sm open:animate-slide-in-right"
     >
-      <div className="flex h-full flex-col px-5 pt-4 pb-6">
+      <div className="flex h-full flex-col px-5 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         <h2 id={titleId} className="sr-only">
           Main menu
         </h2>

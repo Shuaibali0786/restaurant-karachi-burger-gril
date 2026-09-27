@@ -14,8 +14,8 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
   const hasSamples = testimonials.some((t) => t.isSample);
 
   return (
-    <section aria-labelledby="testimonials-title" className="bg-cream-100/70 py-16 sm:py-20">
-      <div className="container-page">
+    <section aria-labelledby="testimonials-title" className="defer-paint bg-cream-100/70 py-16 sm:py-20">
+      <div className="reveal-on-scroll container-page">
         <SectionHeading id="testimonials-title" eyebrow="Straight from the table" title="What Karachi says" align="center" className="mb-4" />
 
         {/* Constitution X: sample reviews are always clearly labelled. */}
@@ -27,7 +27,8 @@ export function Testimonials({ testimonials }: { testimonials: Testimonial[] }) 
           </p>
         )}
 
-        <ul className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-4 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 lg:grid-cols-3">
+        {/* Focusable so keyboard users can scroll the row on phones. */}
+        <ul tabIndex={0} aria-label="Sample reviews" className="-mx-4 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-4 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:overflow-visible md:px-0 lg:grid-cols-3">
           {testimonials.map((t) => (
             <li key={t.id} className="w-[85%] shrink-0 snap-center md:w-auto">
               <figure className="flex h-full flex-col rounded-card bg-white p-6 shadow-card ring-1 ring-cream-200">

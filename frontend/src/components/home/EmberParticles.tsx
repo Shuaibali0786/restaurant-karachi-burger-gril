@@ -9,7 +9,7 @@ const seeded = (i: number, salt: number) => {
   return x - Math.floor(x);
 };
 
-const embers = Array.from({ length: 18 }, (_, i) => {
+const embers = Array.from({ length: 12 }, (_, i) => {
   const size = 2 + seeded(i, 1) * 4;
   const style: EmberStyle = {
     left: `${5 + seeded(i, 2) * 90}%`,

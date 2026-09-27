@@ -81,8 +81,8 @@ export function PromoBanners({ promos }: { promos: Promo[] }) {
   const wings = promos.find((p): p is Extract<Promo, { kind: "weekday-percent" }> => p.kind === "weekday-percent");
 
   return (
-    <section aria-label="Deals" className="bg-cream-50 py-16 sm:py-20">
-      <div className="container-page grid gap-6 lg:grid-cols-2">
+    <section aria-label="Deals" className="defer-paint bg-cream-50 py-16 sm:py-20">
+      <div className="reveal-on-scroll container-page grid gap-6 lg:grid-cols-2">
         {combo && <ComboBanner promo={combo} />}
         {wings && <WingsBanner promo={wings} />}
       </div>

@@ -14,8 +14,9 @@ const CLOCK_MS = 30_000;
 /**
  * The cart as the customer sees it: saved lines joined with the live menu and
  * today's deals (re-checked every 30 s so Wings Wednesday starts/ends on time).
+ * `items` may be null while the menu is still loading — nothing is judged until it arrives.
  */
-export function useCartView(items: readonly MenuItemView[]) {
+export function useCartView(items: readonly MenuItemView[] | null) {
   const hydrated = useHydrated();
   const lines = useCart((state) => state.lines);
   const removeMany = useCart((state) => state.removeMany);
@@ -23,7 +24,7 @@ export function useCartView(items: readonly MenuItemView[]) {
   const now = useNow(CLOCK_MS);
 
   const view = useMemo(
-    () => (now ? resolveCart(lines, items, promos, now) : null),
+    () => (now && items ? resolveCart(lines, items, promos, now) : null),
     [lines, items, promos, now],
   );
 

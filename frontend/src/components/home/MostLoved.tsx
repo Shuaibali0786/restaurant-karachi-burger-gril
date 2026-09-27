@@ -1,25 +1,25 @@
 "use client";
 
-import { useId, useRef, useState, type KeyboardEvent } from "react";
-import type { Category, CategorySlug, MenuItemView } from "@/lib/types";
+import { Fragment, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import type { Category, CategorySlug } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { ProductCard } from "@/components/menu/ProductCard";
 
 interface MostLovedProps {
-  /** Items featured as "most loved", already sorted by popularity. */
-  featured: MenuItemView[];
-  /** Full menu, sorted by popularity — used for the category tabs. */
-  items: MenuItemView[];
+  /** Slugs shown under "All" (most loved, by popularity). */
+  featured: string[];
+  /** Each category tab's top slugs (prepared on the server). */
+  byCategory: Partial<Record<CategorySlug, string[]>>;
   categories: Category[];
+  /** Server-rendered product cards keyed by slug (see buildCardMap). */
+  cards: Record<string, ReactNode>;
 }
 
 type TabId = "all" | CategorySlug;
 
 const ALL_LIMIT = 10;
-const CATEGORY_LIMIT = 5;
 
-export function MostLoved({ featured, items, categories }: MostLovedProps) {
+export function MostLoved({ featured, byCategory, categories, cards }: MostLovedProps) {
   const [active, setActive] = useState<TabId>("all");
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const baseId = useId();
@@ -32,7 +32,7 @@ export function MostLoved({ featured, items, categories }: MostLovedProps) {
   const visible =
     active === "all"
       ? featured.slice(0, ALL_LIMIT)
-      : items.filter((item) => item.category === active).slice(0, CATEGORY_LIMIT);
+      : (byCategory[active] ?? []);
 
   // Arrow-key navigation between tabs (WAI-ARIA tabs pattern, automatic activation).
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
@@ -51,8 +51,8 @@ export function MostLoved({ featured, items, categories }: MostLovedProps) {
   };
 
   return (
-    <section aria-labelledby={`${baseId}-title`} className="bg-cream-100/70 py-16 sm:py-20">
-      <div className="container-page">
+    <section aria-labelledby={`${baseId}-title`} className="defer-paint bg-cream-100/70 py-16 sm:py-20">
+      <div className="reveal-on-scroll container-page">
         <SectionHeading
           id={`${baseId}-title`}
           eyebrow="Our signature"
@@ -100,8 +100,8 @@ export function MostLoved({ featured, items, categories }: MostLovedProps) {
           aria-labelledby={`${baseId}-tab-${active}`}
           className="grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
         >
-          {visible.map((item) => (
-            <ProductCard key={item.slug} item={item} />
+          {visible.map((slug) => (
+            <Fragment key={slug}>{cards[slug]}</Fragment>
           ))}
         </div>
       </div>

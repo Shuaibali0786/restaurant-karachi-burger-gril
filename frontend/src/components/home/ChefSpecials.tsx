@@ -87,8 +87,8 @@ export function ChefSpecials({ items }: { items: MenuItemView[] }) {
   if (!featured) return null;
 
   return (
-    <section aria-labelledby="chef-specials-title" className="bg-charcoal-900 py-16 text-cream-50 sm:py-20">
-      <div className="container-page">
+    <section aria-labelledby="chef-specials-title" className="defer-paint bg-charcoal-900 py-16 text-cream-50 sm:py-20">
+      <div className="reveal-on-scroll container-page">
         <SectionHeading
           id="chef-specials-title"
           eyebrow="Chef's specials"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import type { Category, CategorySlug, MenuItemView } from "@/lib/types";
 import { filterMenu, menuSorts } from "@/lib/menu";
 import { useMenuQuery } from "@/hooks/useMenuQuery";
@@ -10,10 +10,11 @@ import { MenuGrid } from "@/components/menu/MenuGrid";
 interface MenuBrowserProps {
   items: MenuItemView[];
   categories: Category[];
+  cards: Record<string, ReactNode>;
 }
 
 /** Filter bar + results, sharing one URL-backed state. */
-export function MenuBrowser({ items, categories }: MenuBrowserProps) {
+export function MenuBrowser({ items, categories, cards }: MenuBrowserProps) {
   const categoryIds = useMemo(() => categories.map((c) => c.id), [categories]);
   const categoryNames = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c.name])) as Record<CategorySlug, string>,
@@ -50,6 +51,7 @@ export function MenuBrowser({ items, categories }: MenuBrowserProps) {
         <MenuGrid
           items={visible}
           categories={categories}
+          cards={cards}
           grouped={!isFiltered}
           summary={summaryParts.length ? summaryParts.join(" ") : undefined}
           onClear={isFiltered ? clear : undefined}

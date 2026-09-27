@@ -34,7 +34,7 @@ export default async function AboutPage() {
 
       <div className="bg-cream-50">
         {/* Origins */}
-        <section aria-labelledby="origins-title" className="container-page grid items-center gap-10 py-16 sm:py-20 lg:grid-cols-2">
+        <section aria-labelledby="origins-title" className="reveal-on-scroll container-page grid items-center gap-10 py-16 sm:py-20 lg:grid-cols-2">
           <div>
             <p className="text-sm font-extrabold tracking-[0.2em] text-ember-700 uppercase">From Burns Road with fire</p>
             <h2 id="origins-title" className="font-display mt-2 text-5xl leading-none font-black text-ink-900">
@@ -85,7 +85,7 @@ export default async function AboutPage() {
         </section>
 
         {/* Values */}
-        <section aria-labelledby="values-title" className="container-page py-16 sm:py-20">
+        <section aria-labelledby="values-title" className="reveal-on-scroll container-page py-16 sm:py-20">
           <SectionHeading id="values-title" eyebrow="What we stand for" title="Halal. Fresh. Every day." align="center" />
           <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {values.map(({ Icon, title, text }) => (
@@ -101,7 +101,7 @@ export default async function AboutPage() {
         </section>
 
         {/* Visit / hours */}
-        <section aria-label="Visit us" className="container-page grid items-start gap-6 pb-20 lg:grid-cols-2">
+        <section aria-label="Visit us" className="reveal-on-scroll container-page grid items-start gap-6 pb-20 lg:grid-cols-2">
           <div className="rounded-card bg-charcoal-950 p-8 text-cream-50">
             <p className="font-script text-2xl text-flame-400">A table for everyone</p>
             <h2 className="font-display mt-1 text-4xl leading-none font-black">Late-night cravings welcome</h2>

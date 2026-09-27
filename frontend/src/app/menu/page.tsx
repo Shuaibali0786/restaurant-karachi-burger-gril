@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Bike, Clock3, ShieldCheck } from "lucide-react";
-import { getCategories, getMenuItems } from "@/lib/api";
+import { getCategories, getMenuItems, getPromos } from "@/lib/api";
 import { PageHero } from "@/components/ui/PageHero";
 import { MenuBrowser } from "@/components/menu/MenuBrowser";
 import { MenuGrid } from "@/components/menu/MenuGrid";
+import { buildCardMap } from "@/components/menu/cardMap";
+import { MenuHeroCollage } from "@/components/menu/MenuHeroCollage";
 
 export const metadata: Metadata = {
   title: "Menu",
@@ -19,7 +21,11 @@ const facts = [
 ];
 
 export default async function MenuPage() {
-  const [items, categories] = await Promise.all([getMenuItems({ sort: "popular" }), getCategories()]);
+  const [items, categories, promos] = await Promise.all([getMenuItems({ sort: "popular" }), getCategories(), getPromos()]);
+  // The first two cards are above the fold on phones: load their photos eagerly (LCP).
+  const firstCategory = categories[0]?.id;
+  const eager = items.filter((item) => item.category === firstCategory).slice(0, 2).map((item) => item.slug);
+  const cards = buildCardMap(items, promos, { eager });
 
   return (
     <>
@@ -27,6 +33,7 @@ export default async function MenuPage() {
         eyebrow="Karachi ka asli zaiqa"
         title="Our Menu"
         intro="Burgers, fried chicken, wraps and Burns Road BBQ — made fresh when you order."
+        media={<MenuHeroCollage />}
       >
         <ul className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-sand-300">
           {facts.map(({ Icon, label }) => (
@@ -42,11 +49,11 @@ export default async function MenuPage() {
       <Suspense
         fallback={
           <div className="container-page py-10">
-            <MenuGrid items={items} categories={categories} grouped />
+            <MenuGrid items={items} categories={categories} cards={cards} grouped />
           </div>
         }
       >
-        <MenuBrowser items={items} categories={categories} />
+        <MenuBrowser items={items} categories={categories} cards={cards} />
       </Suspense>
     </>
   );

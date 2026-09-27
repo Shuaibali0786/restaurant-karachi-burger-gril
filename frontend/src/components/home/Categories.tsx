@@ -6,7 +6,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 export function Categories({ categories }: { categories: Category[] }) {
   return (
     <section aria-labelledby="categories-title" className="pt-16 pb-6 sm:pt-20">
-      <div className="container-page">
+      <div className="reveal-on-scroll container-page">
         <SectionHeading id="categories-title" eyebrow="Craving something?" title="Explore the menu" align="center" />
         <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-6 sm:overflow-visible sm:px-0 lg:grid-cols-8">
           {categories.map((category) => (

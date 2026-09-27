@@ -23,6 +23,8 @@ export const caveatBrush = Caveat_Brush({
   subsets: ["latin"],
   weight: "400",
   display: "swap",
+  // Accent font only — never the first thing on screen, so don't compete with the hero.
+  preload: false,
   variable: "--font-caveat-brush",
 });
 

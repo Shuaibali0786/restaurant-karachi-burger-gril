@@ -3,33 +3,41 @@ import { Suspense, type ReactNode } from "react";
 import "./globals.css";
 import { fontVariables } from "./fonts";
 import { Providers } from "./providers";
-import { getMenuItems, getPromos, getSiteInfo } from "@/lib/api";
+import { getPromos, getSiteInfo } from "@/lib/api";
+import { siteUrl } from "@/lib/site-url";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
 import { SkipLink } from "@/components/layout/SkipLink";
-import { CartDrawer } from "@/components/cart/CartDrawer";
-import { FlyToCart } from "@/components/cart/FlyToCart";
-import { ItemModal } from "@/components/menu/ItemModal";
+import { Overlays } from "@/components/layout/Overlays";
 import { Toaster } from "@/components/ui/Toaster";
 
 export const metadata: Metadata = {
   // Absolute base for Open Graph image URLs; set NEXT_PUBLIC_SITE_URL when deploying.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "Karachi Burger & Grill · Karachi ka asli zaiqa",
     template: "%s · Karachi Burger & Grill",
   },
   description:
     "Charcoal-grilled burgers, crispy fried chicken and Burns Road BBQ. Order online from Karachi Burger & Grill — open daily 12 noon to 3 AM.",
+  applicationName: "Karachi Burger & Grill",
+  openGraph: {
+    type: "website",
+    siteName: "Karachi Burger & Grill",
+    locale: "en_PK",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {
   themeColor: "#0d0a08",
+  // Lets sticky bottom bars use env(safe-area-inset-bottom) on notched phones.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const [site, items, promos] = await Promise.all([getSiteInfo(), getMenuItems(), getPromos()]);
+  const [site, promos] = await Promise.all([getSiteInfo(), getPromos()]);
 
   return (
     <html lang="en" className={fontVariables}>
@@ -42,12 +50,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
             {children}
           </main>
           <Footer site={site} />
-          {/* Reads ?item= from the URL, so it must sit inside Suspense for static pages. */}
+          {/* Item view, cart drawer and fly-to-cart load on demand; reads ?item=, so it sits in Suspense. */}
           <Suspense fallback={null}>
-            <ItemModal items={items} />
+            <Overlays />
           </Suspense>
-          <CartDrawer items={items} />
-          <FlyToCart />
           <Toaster />
         </Providers>
       </body>

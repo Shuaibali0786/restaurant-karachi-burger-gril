@@ -1,15 +1,15 @@
 "use client";
 
+import { Fragment, type ReactNode } from "react";
 import { Heart, UtensilsCrossed } from "lucide-react";
 import type { MenuItemView } from "@/lib/types";
 import { useFavourites } from "@/stores/favourites";
 import { useHydrated } from "@/stores/hydration";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ProductCard } from "@/components/menu/ProductCard";
 
 /** Hearted items (saved on this device), in the order they were saved. */
-export function FavouritesView({ items }: { items: MenuItemView[] }) {
+export function FavouritesView({ items, cards }: { items: MenuItemView[]; cards: Record<string, ReactNode> }) {
   const hydrated = useHydrated();
   const slugs = useFavourites((state) => state.slugs);
 
@@ -41,7 +41,7 @@ export function FavouritesView({ items }: { items: MenuItemView[] }) {
       </p>
       <div className="grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {saved.map((item) => (
-          <ProductCard key={item.slug} item={item} />
+          <Fragment key={item.slug}>{cards[item.slug]}</Fragment>
         ))}
       </div>
     </>

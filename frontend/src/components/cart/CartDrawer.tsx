@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useCallback, useId } from "react";
 import { ArrowRight, X } from "lucide-react";
-import type { MenuItemView } from "@/lib/types";
 import { useCartView } from "@/hooks/useCartView";
+import { useCatalog } from "@/hooks/useCatalog";
 import { useModalDialog } from "@/hooks/useModalDialog";
 import { useUi } from "@/stores/ui";
 import { CartEmpty } from "@/components/cart/CartEmpty";
@@ -12,7 +12,8 @@ import { CartLine } from "@/components/cart/CartLine";
 import { CartSummary } from "@/components/cart/CartSummary";
 
 /** Slide-in cart from the navbar bag icon (full width on phones). */
-export function CartDrawer({ items }: { items: MenuItemView[] }) {
+export function CartDrawer() {
+  const items = useCatalog();
   const open = useUi((state) => state.cartOpen);
   const closeCart = useUi((state) => state.closeCart);
   const onClosed = useCallback(() => closeCart(), [closeCart]);
@@ -54,7 +55,7 @@ export function CartDrawer({ items }: { items: MenuItemView[] }) {
                 <CartLine key={entry.line.key} entry={entry} onNavigate={close} />
               ))}
             </ul>
-            <div className="border-t border-cream-200 bg-cream-100/60 px-5 pt-4 pb-5">
+            <div className="border-t border-cream-200 bg-cream-100/60 px-5 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
               <CartSummary totals={totals} promoEnded={promoEnded} closedNow={closedNow} onCheckout={close} />
               <Link
                 href="/cart"

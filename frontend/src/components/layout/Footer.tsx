@@ -12,7 +12,7 @@ function LinkColumn({ title, links }: { title: string; links: NavLink[] }) {
       <ul className="space-y-1">
         {links.map((link) => (
           <li key={link.label}>
-            <Link href={link.href} className="inline-flex min-h-11 items-center text-sand-300 transition hover:text-flame-400 sm:min-h-9">
+            <Link href={link.href} className="inline-flex min-h-11 items-center text-sand-300 transition hover:text-flame-400">
               {link.label}
             </Link>
           </li>
@@ -56,7 +56,7 @@ export function Footer({ site }: { site: SiteInfo }) {
               <li key={text} className="flex items-start gap-3">
                 <Icon aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ember-500" />
                 {href ? (
-                  <a href={href} className="transition hover:text-flame-400">
+                  <a href={href} className="-my-2.5 inline-flex min-h-11 items-center break-all transition hover:text-flame-400">
                     {text}
                   </a>
                 ) : (

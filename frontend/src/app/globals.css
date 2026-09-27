@@ -4,7 +4,7 @@
  * Karachi Burger & Grill design tokens (Constitution II).
  * Components use these utilities only — never raw hex values.
  * Contrast (research R2): ember-500 text fails AA on cream, so text on light
- * backgrounds uses ember-700; buttons on ember/flame use charcoal text.
+ * backgrounds uses ember-700 (≥4.9:1 on cream-100, ≥5.4:1 on cream-50); buttons on ember/flame use charcoal text.
  */
 @theme {
   /* Fire theme — dark bands */
@@ -18,7 +18,7 @@
   --color-ember-400: #ff7a45;
   --color-ember-500: #ff5a1f;
   --color-ember-600: #e8480f;
-  --color-ember-700: #c2410c;
+  --color-ember-700: #b43c0c;
   --color-flame-300: #ffc65c;
   --color-flame-400: #ffb020;
 
@@ -50,6 +50,19 @@
   --animate-reveal-up: reveal-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-slide-in-right: slide-in-right 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-sheet-up: sheet-up 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* `backwards` fill: no transform lingers after the animation (keeps sticky/fixed children intact). */
+  --animate-page-in: page-in 380ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 
   @keyframes sheet-up {
     from {
@@ -69,9 +82,10 @@
     }
   }
 
+  /* Starts partly visible: content is never hidden, and it counts as painted straight away. */
   @keyframes reveal-up {
     from {
-      opacity: 0;
+      opacity: 0.35;
       transform: translateY(16px);
     }
     to {
@@ -125,6 +139,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* App-like taps: no grey flash on touch. */
+    -webkit-tap-highlight-color: transparent;
   }
 
   body {
@@ -191,6 +207,34 @@
   }
 }
 
+/*
+ * Scroll-driven section reveal (Constitution IV): sections rise gently into
+ * place as they enter the viewport. Only transform animates — never opacity —
+ * so content is always visible; unsupported browsers simply show it static.
+ */
+@keyframes scroll-rise {
+  from {
+    transform: translateY(32px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .reveal-on-scroll {
+    animation: scroll-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 70%;
+  }
+}
+
+/* Skip style/layout/paint for below-the-fold sections until they near the viewport. */
+.defer-paint {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 60rem;
+}
+
 /* Constitution IV: honour reduced motion everywhere. */
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -203,5 +247,9 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .reveal-on-scroll {
+    animation: none !important;
   }
 }

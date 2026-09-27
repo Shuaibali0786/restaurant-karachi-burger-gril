@@ -1,7 +1,8 @@
+import { Fragment, type ReactNode } from "react";
 import { SearchX } from "lucide-react";
 import type { Category, MenuItemView } from "@/lib/types";
+import { cn } from "@/lib/cn";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ProductCard } from "@/components/menu/ProductCard";
 
 const grid = "grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
 
@@ -9,13 +10,15 @@ interface MenuGridProps {
   /** Already filtered and sorted. */
   items: MenuItemView[];
   categories: Category[];
+  /** Server-rendered product cards keyed by slug (see buildCardMap). */
+  cards: Record<string, ReactNode>;
   /** Unfiltered view: show sections per category, like a delivery app. */
   grouped: boolean;
   summary?: string;
   onClear?: () => void;
 }
 
-export function MenuGrid({ items, categories, grouped, summary, onClear }: MenuGridProps) {
+export function MenuGrid({ items, categories, cards, grouped, summary, onClear }: MenuGridProps) {
   if (items.length === 0) {
     return (
       <EmptyState
@@ -40,18 +43,18 @@ export function MenuGrid({ items, categories, grouped, summary, onClear }: MenuG
   if (grouped) {
     return (
       <div className="space-y-14">
-        {categories.map((category) => {
+        {categories.map((category, index) => {
           const inCategory = items.filter((item) => item.category === category.id);
           if (inCategory.length === 0) return null;
           return (
-            <section key={category.id} aria-labelledby={`menu-${category.id}`} className="scroll-mt-48">
+            <section key={category.id} aria-labelledby={`menu-${category.id}`} className={cn("reveal-on-scroll scroll-mt-48", index > 0 && "defer-paint")}>
               <h2 id={`menu-${category.id}`} className="font-display mb-5 flex items-baseline gap-3 text-4xl font-black text-ink-900">
                 {category.name}
                 <span className="text-base font-bold text-ink-600">{inCategory.length}</span>
               </h2>
               <div className={grid}>
                 {inCategory.map((item) => (
-                  <ProductCard key={item.slug} item={item} />
+                  <Fragment key={item.slug}>{cards[item.slug]}</Fragment>
                 ))}
               </div>
             </section>
@@ -76,7 +79,7 @@ export function MenuGrid({ items, categories, grouped, summary, onClear }: MenuG
       </div>
       <div className={grid}>
         {items.map((item) => (
-          <ProductCard key={item.slug} item={item} />
+          <Fragment key={item.slug}>{cards[item.slug]}</Fragment>
         ))}
       </div>
     </div>

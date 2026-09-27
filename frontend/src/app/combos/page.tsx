@@ -11,6 +11,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { PromoBanners } from "@/components/home/PromoBanners";
 import { OpenItemButton } from "@/components/menu/OpenItemButton";
 import { ProductCard } from "@/components/menu/ProductCard";
+import { dealFor } from "@/components/menu/cardMap";
 
 export const metadata: Metadata = {
   title: "Combos & deals",
@@ -84,7 +85,7 @@ export default async function CombosPage() {
                 </h3>
                 <div className="grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                   {inCategory.map((item) => (
-                    <ProductCard key={item.slug} item={item} />
+                    <ProductCard key={item.slug} item={item} deal={dealFor(item.slug, promos)} />
                   ))}
                 </div>
               </section>

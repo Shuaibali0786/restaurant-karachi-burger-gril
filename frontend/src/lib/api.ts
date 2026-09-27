@@ -16,7 +16,7 @@ import { loadOrder, loadOrders, saveOrder } from "@/lib/local-orders";
 import { filterMenu, optionSummary } from "@/lib/menu";
 import { generateOrderId } from "@/lib/orders";
 import { cartTotals, resolveCart } from "@/lib/pricing";
-import { pkMobile } from "@/lib/validation";
+import { normalizePkMobile } from "@/lib/phone";
 import type {
   Category,
   CategorySlug,
@@ -104,9 +104,9 @@ const pause = () =>
 export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
   if (input.lines.length === 0) throw new ApiError("EMPTY_CART", "Your cart is empty.");
 
-  const phone = pkMobile.safeParse(input.customer.phone);
+  const phone = normalizePkMobile(input.customer.phone);
   const area = deliveryAreas.find((a) => a.id === input.delivery.area);
-  if (!phone.success || !area || input.customer.name.trim().length < 2 || input.delivery.address.trim().length < 10) {
+  if (!phone || !area || input.customer.name.trim().length < 2 || input.delivery.address.trim().length < 10) {
     throw new ApiError("VALIDATION_FAILED", "Please check your delivery details.");
   }
 
@@ -124,7 +124,7 @@ export async function placeOrder(input: PlaceOrderInput): Promise<Order> {
   const totals = cartTotals(cart.lines);
   const order: Order = {
     id: generateOrderId(new Set(loadOrders().map((o) => o.id))),
-    customer: { name: input.customer.name.trim(), phone: phone.data },
+    customer: { name: input.customer.name.trim(), phone },
     delivery: { ...input.delivery, areaName: area.name },
     timing: input.timing,
     payment: "cod",

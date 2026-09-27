@@ -20,7 +20,8 @@ npm run lint         # eslint . — zero errors
 npm run typecheck    # tsc --noEmit — strict
 npm run test         # vitest — pricing, promos, time zone, validation, cart store
 npm run build        # next build — zero errors
-npm run test:e2e     # playwright — core journeys + 4 viewport screenshots
+npm run test:e2e     # playwright — ordering flow, keyboard, axe AA scan, 4 viewports
+# Screenshots for docs: SCREENSHOTS=1 npx playwright test tests/e2e/responsive.spec.ts --project=mobile-360 --project=desktop-1280
 ```
 
 Lighthouse (Principle VII): `npm run build && npm run start`, then run Lighthouse (mobile) on

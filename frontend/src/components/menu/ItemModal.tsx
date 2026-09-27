@@ -3,8 +3,9 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useId } from "react";
 import { X } from "lucide-react";
-import type { MenuItemView } from "@/lib/types";
+import { useCatalog } from "@/hooks/useCatalog";
 import { useModalDialog } from "@/hooks/useModalDialog";
+import { useSheetDrag } from "@/hooks/useSheetDrag";
 import { closeItem, ITEM_PARAM, restoreItemOpenerFocus } from "@/stores/ui";
 import { ItemDetail } from "@/components/menu/ItemDetail";
 
@@ -13,9 +14,10 @@ import { ItemDetail } from "@/components/menu/ItemDetail";
  * dialog on desktop, bottom sheet on phones. Native <dialog> gives focus
  * containment and Esc; the back button closes it like a real app.
  */
-export function ItemModal({ items }: { items: MenuItemView[] }) {
+export function ItemModal() {
+  const items = useCatalog();
   const slug = useSearchParams().get(ITEM_PARAM);
-  const item = slug ? (items.find((candidate) => candidate.slug === slug) ?? null) : null;
+  const item = slug && items ? (items.find((candidate) => candidate.slug === slug) ?? null) : null;
   const titleId = useId();
 
   const onDialogClosed = useCallback(() => {
@@ -24,6 +26,7 @@ export function ItemModal({ items }: { items: MenuItemView[] }) {
   }, []);
 
   const { ref, close, onBackdropClick } = useModalDialog(item !== null, onDialogClosed);
+  const sheetDrag = useSheetDrag(ref, close);
 
   // overflow-clip (not hidden): focusing a field must never scroll the dialog box
   // itself — only the inner content scrolls, keeping the order bar pinned.
@@ -36,8 +39,10 @@ export function ItemModal({ items }: { items: MenuItemView[] }) {
     >
       {item && (
         <div className="relative">
-          {/* Drag handle (visual cue that this is a bottom sheet on phones) */}
-          <span aria-hidden="true" className="absolute top-2.5 left-1/2 z-20 h-1.5 w-12 -translate-x-1/2 rounded-full bg-white/80 md:hidden" />
+          {/* Grab strip: drag the sheet down to close it on phones (the ✕ button is the accessible way). */}
+          <div aria-hidden="true" className="absolute inset-x-16 top-0 z-20 flex h-10 cursor-grab touch-none justify-center pt-2.5 md:hidden" {...sheetDrag}>
+            <span className="h-1.5 w-12 rounded-full bg-white/80 shadow" />
+          </div>
           <button
             type="button"
             onClick={close}
