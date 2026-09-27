@@ -5,6 +5,7 @@ import { fontVariables } from "./fonts";
 import { Providers } from "./providers";
 import { getPromos, getSiteInfo } from "@/lib/api";
 import { siteUrl } from "@/lib/site-url";
+import type { Promo } from "@/lib/types";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { Navbar } from "@/components/layout/Navbar";
@@ -37,7 +38,12 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
-  const [site, promos] = await Promise.all([getSiteInfo(), getPromos()]);
+  // Promos come from the backend; every page renders through this layout, so an unreachable API must
+  // never take the whole site down (research R10) — the Wings Wednesday banner just stays off.
+  const [site, promos]: [Awaited<ReturnType<typeof getSiteInfo>>, Promo[]] = await Promise.all([
+    getSiteInfo(),
+    getPromos().catch(() => []),
+  ]);
 
   return (
     <html lang="en" className={fontVariables}>

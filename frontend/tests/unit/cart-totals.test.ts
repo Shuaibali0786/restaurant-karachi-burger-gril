@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { getMenuItems, getPromos } from "@/lib/api";
+import { menuItems } from "@/lib/data/menu-items";
+import { promos } from "@/lib/data/promos";
 import { mergeLine, type CartLineInput } from "@/lib/cart";
+import { toView } from "@/lib/menu-view";
 import { cartTotals, resolveCart } from "@/lib/pricing";
 import type { CartLine } from "@/lib/types";
+
+const items = menuItems.map(toView);
 
 const pkt = (iso: string) => new Date(`${iso}+05:00`);
 const WEDNESDAY = pkt("2026-09-30T20:00:00");
@@ -19,9 +23,7 @@ const line = (itemSlug: string, optionId: string, quantity = 1, addonIds: string
   quantity,
 });
 
-describe("cart totals", async () => {
-  const items = await getMenuItems();
-  const promos = await getPromos();
+describe("cart totals", () => {
   const resolve = (lines: CartLine[], now: Date) => resolveCart(lines, items, promos, now);
   const totals = (lines: CartLine[], now: Date) => cartTotals(resolve(lines, now).lines);
 

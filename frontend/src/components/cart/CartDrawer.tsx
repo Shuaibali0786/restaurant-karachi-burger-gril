@@ -2,18 +2,19 @@
 
 import Link from "next/link";
 import { useCallback, useId } from "react";
-import { ArrowRight, X } from "lucide-react";
+import { ArrowRight, CloudAlert, X } from "lucide-react";
 import { useCartView } from "@/hooks/useCartView";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useModalDialog } from "@/hooks/useModalDialog";
 import { useUi } from "@/stores/ui";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { CartEmpty } from "@/components/cart/CartEmpty";
 import { CartLine } from "@/components/cart/CartLine";
 import { CartSummary } from "@/components/cart/CartSummary";
 
 /** Slide-in cart from the navbar bag icon (full width on phones). */
 export function CartDrawer() {
-  const items = useCatalog();
+  const { items, error, retry } = useCatalog();
   const open = useUi((state) => state.cartOpen);
   const closeCart = useUi((state) => state.closeCart);
   const onClosed = useCallback(() => closeCart(), [closeCart]);
@@ -44,7 +45,24 @@ export function CartDrawer() {
           </button>
         </header>
 
-        {ready && lines.length === 0 ? (
+        {error ? (
+          <div className="flex flex-1 items-center px-5">
+            <EmptyState
+              icon={<CloudAlert aria-hidden="true" className="size-9" />}
+              title="We're having trouble loading the menu"
+              text="Please check your connection and try again."
+              action={
+                <button
+                  type="button"
+                  onClick={retry}
+                  className="min-h-11 rounded-full bg-charcoal-950 px-6 font-bold text-cream-50 transition hover:bg-charcoal-800"
+                >
+                  Retry
+                </button>
+              }
+            />
+          </div>
+        ) : ready && lines.length === 0 ? (
           <div className="flex flex-1 items-center px-5">
             <CartEmpty onBrowse={close} />
           </div>

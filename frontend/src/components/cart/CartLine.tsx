@@ -43,6 +43,11 @@ export function CartLine({ entry, onNavigate, size = "compact" }: CartLineProps)
               {optionSummary(option)}
               {addons.length > 0 && <> · + {addons.map((a) => a.label).join(", ")}</>}
             </p>
+            {item.soldOut && (
+              <p className="mt-0.5 text-sm font-bold text-ember-700" role="alert">
+                No longer available
+              </p>
+            )}
             {line.note && (
               <p className="mt-0.5 truncate text-sm text-ink-600 italic" title={line.note}>
                 “{line.note}”

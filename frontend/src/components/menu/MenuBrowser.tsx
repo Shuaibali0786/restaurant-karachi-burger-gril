@@ -1,9 +1,12 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { CloudAlert } from "lucide-react";
 import type { Category, CategorySlug, MenuItemView } from "@/lib/types";
 import { filterMenu, menuSorts } from "@/lib/menu";
 import { useMenuQuery } from "@/hooks/useMenuQuery";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Filters } from "@/components/menu/Filters";
 import { MenuGrid } from "@/components/menu/MenuGrid";
 
@@ -11,10 +14,13 @@ interface MenuBrowserProps {
   items: MenuItemView[];
   categories: Category[];
   cards: Record<string, ReactNode>;
+  /** The server couldn't load the menu (backend unreachable) — show a retry state instead of "No matches". */
+  loadError?: boolean;
 }
 
 /** Filter bar + results, sharing one URL-backed state. */
-export function MenuBrowser({ items, categories, cards }: MenuBrowserProps) {
+export function MenuBrowser({ items, categories, cards, loadError }: MenuBrowserProps) {
+  const router = useRouter();
   const categoryIds = useMemo(() => categories.map((c) => c.id), [categories]);
   const categoryNames = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c.name])) as Record<CategorySlug, string>,
@@ -43,6 +49,27 @@ export function MenuBrowser({ items, categories, cards }: MenuBrowserProps) {
     state.category && `in ${categoryNames[state.category]}`,
     state.sort !== "popular" && `sorted ${menuSorts.find((s) => s.value === state.sort)?.label.toLowerCase()}`,
   ].filter(Boolean);
+
+  if (loadError) {
+    return (
+      <div className="container-page py-10">
+        <EmptyState
+          icon={<CloudAlert aria-hidden="true" className="size-9" />}
+          title="We're having trouble loading the menu"
+          text="Please check your connection and try again in a moment."
+          action={
+            <button
+              type="button"
+              onClick={() => router.refresh()}
+              className="min-h-11 rounded-full bg-charcoal-950 px-6 font-bold text-cream-50 transition hover:bg-charcoal-800"
+            >
+              Retry
+            </button>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <>

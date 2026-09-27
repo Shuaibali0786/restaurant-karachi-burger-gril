@@ -26,8 +26,16 @@ def _pg(url: str | None) -> str | None:
     return url
 
 
-_dev_url = _pg(os.environ.get("DATABASE_URL") or _file.get("DATABASE_URL"))
-_test_url = _pg(os.environ.get("TEST_DATABASE_URL") or _file.get("TEST_DATABASE_URL"))
+def _configured(url: str | None) -> str | None:
+    """None for an unset or still-placeholder value (e.g. backend/.env.example's USER:PASSWORD@ep-yyyy),
+    so integration tests skip with a clear message instead of trying to connect and failing."""
+    if not url or "USER:PASSWORD" in url or "ep-yyyy" in url or "ep-xxxx" in url:
+        return None
+    return url
+
+
+_dev_url = _configured(_pg(os.environ.get("DATABASE_URL") or _file.get("DATABASE_URL")))
+_test_url = _configured(_pg(os.environ.get("TEST_DATABASE_URL") or _file.get("TEST_DATABASE_URL")))
 
 
 def _same_database(a: str, b: str) -> bool:

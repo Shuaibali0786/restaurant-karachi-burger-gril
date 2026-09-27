@@ -70,9 +70,7 @@ def cmd_create_admin(_: argparse.Namespace) -> int:
         if existing is not None:
             print(f"Admin account for {email} already exists (role: {existing.role}). Nothing to do.")
             return 0
-        session.add(
-            User(name=settings.admin_name, email=email, password_hash=hash_password(password), role="admin")
-        )
+        session.add(User(name=settings.admin_name, email=email, password_hash=hash_password(password), role="admin"))
         session.commit()
     print(f"OK: admin account created for {email}.")
     return 0

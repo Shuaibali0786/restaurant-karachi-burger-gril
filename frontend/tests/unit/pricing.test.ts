@@ -1,31 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { getMenuItem } from "@/lib/api";
+import { menuItems } from "@/lib/data/menu-items";
 import { lineKey, MAX_QUANTITY, mergeLine } from "@/lib/cart";
+import { toView } from "@/lib/menu-view";
 import { lineTotal, unitPrice } from "@/lib/pricing";
-import type { CartLine, MenuItemView } from "@/lib/types";
+import type { CartLine } from "@/lib/types";
 
-const item = async (slug: string) => (await getMenuItem(slug)) as MenuItemView;
+const views = menuItems.map(toView);
+const item = (slug: string) => views.find((candidate) => candidate.slug === slug)!;
 
 describe("unitPrice / lineTotal", () => {
-  it("adds option and add-ons to the base price", async () => {
-    const zinger = await item("burns-road-zinger");
+  it("adds option and add-ons to the base price", () => {
+    const zinger = item("burns-road-zinger");
     const unit = unitPrice(zinger, "double", ["extra-cheese"]);
     expect(unit).toBe(690 + 300 + 100);
     expect(lineTotal(unit, 2)).toBe(2180);
   });
 
-  it("uses per-item size prices for fried chicken", async () => {
-    const bucket = await item("crispy-bucket");
+  it("uses per-item size prices for fried chicken", () => {
+    const bucket = item("crispy-bucket");
     expect(unitPrice(bucket, "family-pack", [])).toBe(4770);
   });
 
-  it("shows the base price before an option is chosen", async () => {
-    const zinger = await item("burns-road-zinger");
+  it("shows the base price before an option is chosen", () => {
+    const zinger = item("burns-road-zinger");
     expect(unitPrice(zinger, null, ["jalapenos"])).toBe(740);
   });
 
-  it("rejects options and add-ons the item does not have", async () => {
-    const zinger = await item("burns-road-zinger");
+  it("rejects options and add-ons the item does not have", () => {
+    const zinger = item("burns-road-zinger");
     expect(() => unitPrice(zinger, "family-pack", [])).toThrow();
     expect(() => unitPrice(zinger, "single", ["avocado"])).toThrow();
   });

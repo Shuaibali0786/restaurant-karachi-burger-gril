@@ -57,6 +57,7 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
   const total = lineTotal(unit - promoDiscountPerUnit(unit, promo), quantity);
   const fullTotal = lineTotal(unit, quantity);
   const ready = optionId !== null;
+  const canAdd = ready && !item.soldOut;
   const TitleTag = isModal ? "h2" : "h1";
 
   const toggleAddon = (id: string) =>
@@ -73,6 +74,7 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
   const cancel = () => (isModal ? onClose?.() : router.push("/menu"));
 
   const handleAdd = () => {
+    if (item.soldOut) return; // belt and braces: the button below is already disabled
     if (!optionId) {
       // Blocked until an option is chosen: point the customer at what's missing.
       setShowOptionError(true);
@@ -264,38 +266,56 @@ export function ItemDetail({ item, variant, onClose, titleId }: ItemDetailProps)
             isModal ? "px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-7" : "-mx-4 mt-8 px-4 py-4 sm:mx-0 sm:rounded-card sm:px-5 lg:static lg:border-0 lg:bg-transparent lg:px-0",
           )}
         >
-          {!ready && (
-            <p className="mb-2 text-center text-xs font-semibold text-ink-600" aria-hidden="true">
-              Choose an option to continue
+          {item.soldOut ? (
+            <p className="mb-2 text-center text-xs font-semibold text-ember-700" aria-hidden="true">
+              This item is sold out today
             </p>
+          ) : (
+            !ready && (
+              <p className="mb-2 text-center text-xs font-semibold text-ink-600" aria-hidden="true">
+                Choose an option to continue
+              </p>
+            )
           )}
           <div className="flex items-center gap-2 sm:gap-3">
             <QuantityStepper value={quantity} onChange={setQuantity} onRemove={cancel} itemName={item.name} />
             <button
               type="button"
               onClick={handleAdd}
-              aria-disabled={!ready}
-              aria-label={ready ? `Add to cart, ${formatRs(total)}` : `Add to cart, ${formatRs(total)}. Choose an option first`}
+              aria-disabled={!canAdd}
+              aria-label={
+                item.soldOut
+                  ? `${item.name} is sold out today`
+                  : ready
+                    ? `Add to cart, ${formatRs(total)}`
+                    : `Add to cart, ${formatRs(total)}. Choose an option first`
+              }
               className={cn(
                 "flex min-h-12 min-w-0 flex-1 items-center justify-between gap-2 rounded-full px-3.5 text-sm font-extrabold whitespace-nowrap transition sm:gap-3 sm:px-5 sm:text-base",
-                ready
+                canAdd
                   ? "bg-ember-500 text-charcoal-950 shadow-[0_10px_30px_-10px_rgb(255_90_31/0.9)] hover:bg-flame-400"
                   : "cursor-not-allowed bg-cream-200 text-ink-600",
               )}
             >
-              <span className="flex items-baseline gap-1.5 tabular-nums">
-                {formatRs(total)}
-                {total < fullTotal && (
-                  <s className="text-xs font-semibold opacity-70 max-[400px]:hidden">
-                    <span className="sr-only">was </span>
-                    {formatRs(fullTotal)}
-                  </s>
-                )}
-              </span>
-              <span aria-hidden="true" className="h-5 w-px bg-current opacity-30 max-[400px]:hidden" />
-              <span className="flex items-center gap-1.5">
-                Add to cart <ArrowRight aria-hidden="true" className="size-4 max-[400px]:hidden" />
-              </span>
+              {item.soldOut ? (
+                <span className="mx-auto">Sold out today</span>
+              ) : (
+                <>
+                  <span className="flex items-baseline gap-1.5 tabular-nums">
+                    {formatRs(total)}
+                    {total < fullTotal && (
+                      <s className="text-xs font-semibold opacity-70 max-[400px]:hidden">
+                        <span className="sr-only">was </span>
+                        {formatRs(fullTotal)}
+                      </s>
+                    )}
+                  </span>
+                  <span aria-hidden="true" className="h-5 w-px bg-current opacity-30 max-[400px]:hidden" />
+                  <span className="flex items-center gap-1.5">
+                    Add to cart <ArrowRight aria-hidden="true" className="size-4 max-[400px]:hidden" />
+                  </span>
+                </>
+              )}
             </button>
           </div>
         </div>

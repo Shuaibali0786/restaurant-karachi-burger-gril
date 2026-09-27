@@ -21,7 +21,15 @@ const facts = [
 ];
 
 export default async function MenuPage() {
-  const [items, categories, promos] = await Promise.all([getMenuItems({ sort: "popular" }), getCategories(), getPromos()]);
+  let items: Awaited<ReturnType<typeof getMenuItems>> = [];
+  let categories: Awaited<ReturnType<typeof getCategories>> = [];
+  let promos: Awaited<ReturnType<typeof getPromos>> = [];
+  let loadError = false;
+  try {
+    [items, categories, promos] = await Promise.all([getMenuItems({ sort: "popular" }), getCategories(), getPromos()]);
+  } catch {
+    loadError = true;
+  }
   // The first two cards are above the fold on phones: load their photos eagerly (LCP).
   const firstCategory = categories[0]?.id;
   const eager = items.filter((item) => item.category === firstCategory).slice(0, 2).map((item) => item.slug);
@@ -53,7 +61,7 @@ export default async function MenuPage() {
           </div>
         }
       >
-        <MenuBrowser items={items} categories={categories} cards={cards} />
+        <MenuBrowser items={items} categories={categories} cards={cards} loadError={loadError} />
       </Suspense>
     </>
   );

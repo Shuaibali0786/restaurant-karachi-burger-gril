@@ -1,26 +1,25 @@
 /**
  * The single data entry point for screens and components (Constitution IX).
- * Phase 1 reads mock data from `src/lib/data`; Phase 2 swaps these bodies for
- * calls to the FastAPI backend without changing any signature.
- * See specs/001-restaurant-frontend/contracts/frontend-api.md.
+ * Menu reads (this file's `get*` menu functions) now call the FastAPI backend
+ * through `lib/http.ts`; ordering, accounts and reviews still use mock data
+ * until their own phases land. See specs/002-restaurant-backend/contracts/frontend-api.md.
  */
 import { deliveryAreas } from "@/lib/data/areas";
-import { categories } from "@/lib/data/categories";
 import { menuItems } from "@/lib/data/menu-items";
 import { promos } from "@/lib/data/promos";
 import { site } from "@/lib/data/site";
 import { testimonials } from "@/lib/data/testimonials";
 import { ApiError } from "@/lib/api-error";
 import { lineKey } from "@/lib/cart";
+import { request } from "@/lib/http";
 import { loadOrder, loadOrders, saveOrder } from "@/lib/local-orders";
-import { filterMenu, optionSummary } from "@/lib/menu";
+import { optionSummary } from "@/lib/menu";
 import { generateOrderId } from "@/lib/orders";
 import { cartTotals, resolveCart } from "@/lib/pricing";
 import { normalizePkMobile } from "@/lib/phone";
 import { toView } from "@/lib/menu-view";
 import type {
   Category,
-  CategorySlug,
   DeliveryAreaOption,
   FeaturedPlacement,
   MenuItemView,
@@ -32,8 +31,7 @@ import type {
   Testimonial,
 } from "@/lib/types";
 
-const categoryNames = Object.fromEntries(categories.map((c) => [c.id, c.name])) as Record<CategorySlug, string>;
-
+// Still backs the mock `placeOrder` below until orders move to the API (Phase 2, User Story 1).
 const views = menuItems.map(toView);
 
 export async function getSiteInfo(): Promise<SiteInfo> {
@@ -41,30 +39,40 @@ export async function getSiteInfo(): Promise<SiteInfo> {
 }
 
 export async function getCategories(): Promise<Category[]> {
-  return [...categories].sort((a, b) => a.order - b.order);
+  return request<Category[]>("/categories", { cacheable: true });
 }
 
 export async function getMenuItems(query: MenuQuery = {}): Promise<MenuItemView[]> {
-  return filterMenu(views, query, categoryNames);
+  return request<MenuItemView[]>("/menu-items", {
+    query: { category: query.category, search: query.search, sort: query.sort },
+    cacheable: true,
+  });
 }
 
 export async function getMenuItem(slug: string): Promise<MenuItemView | null> {
-  return views.find((item) => item.slug === slug) ?? null;
+  try {
+    return await request<MenuItemView>(`/menu-items/${encodeURIComponent(slug)}`, { cacheable: true });
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "NOT_FOUND") return null;
+    throw error;
+  }
 }
 
+/** Every orderable slug, for `generateStaticParams`. Empty on a build-time API hiccup, never throws. */
 export async function getMenuSlugs(): Promise<string[]> {
-  return views.map((item) => item.slug);
+  try {
+    return (await getMenuItems()).map((item) => item.slug);
+  } catch {
+    return [];
+  }
 }
 
 export async function getFeaturedItems(placement: FeaturedPlacement): Promise<MenuItemView[]> {
-  return filterMenu(
-    views.filter((item) => item.featured.includes(placement)),
-    { sort: "popular" },
-  );
+  return request<MenuItemView[]>("/menu-items", { query: { featured: placement, sort: "popular" }, cacheable: true });
 }
 
 export async function getPromos(): Promise<Promo[]> {
-  return promos;
+  return request<Promo[]>("/promos", { cacheable: true });
 }
 
 export async function getTestimonials(): Promise<Testimonial[]> {
@@ -72,7 +80,7 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 }
 
 export async function getDeliveryAreas(): Promise<DeliveryAreaOption[]> {
-  return deliveryAreas;
+  return request<DeliveryAreaOption[]>("/delivery-areas", { cacheable: true });
 }
 
 /** Short, realistic pause so the checkout button's loading state is visible (browser only). */
