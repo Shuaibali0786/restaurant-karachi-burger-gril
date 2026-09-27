@@ -1,101 +1,158 @@
 # Karachi Burger & Grill
 
-> **Karachi ka asli zaiqa.** Charcoal-grilled burgers, crispy fried chicken and Burns Road BBQ,
-> ordered online.
+> **Karachi ka asli zaiqa**
 
-This is the restaurant's website frontend. It's fast, accessible and works like a food-ordering app
-on phones. It runs on mock data today and is ready to plug into a FastAPI backend.
+A full online food-ordering website for a burger & BBQ restaurant on Burns Road, Karachi.
 
-![Home page on desktop](docs/screenshots/home-desktop-1280.jpg)
+**Status: 🟢 Frontend complete — 🛠️ backend in progress**
 
-## Features
+![Karachi Burger & Grill home page](docs/screenshots/home-desktop-1280.jpg)
 
-- **Menu:** 33 items in 8 categories, with search, category filters and sorting. The filter state
-  lives in the URL, so any view can be shared.
-- **Item view:** a dialog on desktop and a draggable bottom sheet on phones. You choose the
-  required size or meal first, then add-ons, a note and a quantity. The browser Back button closes
-  it, and every item also has its own page (`/menu/<slug>`).
-- **Cart:**
-  - slide-in drawer and a `/cart` page
-  - prices always recomputed from the menu
-  - Wings Wednesday discount in Pakistan time
-  - delivery Rs 150, free from Rs 1,500
-- **Checkout:**
-  - validated form with Pakistani mobile formatting
-  - ASAP or a half-hour slot inside opening hours
-  - Cash on Delivery
-  - order confirmation with a demo live tracker
-- **Also included:**
-  - favourites
-  - combos, about, contact, FAQ, privacy, terms and order-tracking pages
-  - login and signup screens (UI only for now)
-  - a branded 404 page
-- **Polish:**
-  - page transitions, scroll reveals and the fly-to-cart animation, all turned off by the OS
-    "Reduce motion" setting
-  - WCAG 2.1 AA, checked with axe
-  - SEO: sitemap, robots, Open Graph image and JSON-LD
-  - zero layout shift
+| Menu | Item popup | Cart |
+|---|---|---|
+| ![Menu with search and category filters](docs/screenshots/menu-desktop-1280.jpg) | ![Item popup with options and extras](docs/screenshots/item-desktop-1280.jpg) | ![Cart drawer with free-delivery bar](docs/screenshots/cart-desktop-1280.jpg) |
+| **Checkout** | **Order tracker** | **Mobile** |
+| ![Checkout form with Cash on Delivery](docs/screenshots/checkout-desktop-1280.jpg) | ![Order confirmation and tracker](docs/screenshots/order-desktop-1280.jpg) | ![Item bottom sheet on a phone](docs/screenshots/item-mobile-360.jpg) |
+
+---
+
+## What you can do on the website
+
+- 🍔 **Browse the full menu.** There are 33 items in 8 categories: Burgers, Wraps, Fried Chicken,
+  Sandwiches, BBQ, Bowls, Sides & Drinks, and Combos.
+- 🔎 **Search and filter.** Type "tikka" or "wings", tap a category, or sort by price or popularity.
+- 🎛️ **Make it yours.** Choose a size or meal: a Meal includes Masala Fries + Chilled Cola. You can
+  add extras like cheese or jalapeños and set the quantity.
+- ✍️ **Add special instructions**, like "no onions" or "extra spicy".
+- 🛒 **Review your cart.** Change quantities, and a progress bar shows how much more you need for
+  **free delivery (Rs 1,500 and above)**. Otherwise delivery is Rs 150.
+- 📍 **Check out for delivery in Karachi.** Choose Saddar, Clifton, DHA, PECHS, Gulshan or North
+  Nazimabad, then ASAP or a time later today.
+- 💵 **Pay with Cash on Delivery.** Card, JazzCash and Easypaisa are marked "coming soon".
+- ✅ **Get an order confirmation** with an order number, estimated arrival time and a live-style
+  tracker: Confirmed → Preparing → On the way → Delivered.
+- ❤️ **Save favourites** so you can find the dishes you love again.
+- 🔥 **Get the Wings Wednesday deal.** Fire Wings are 20% off every Wednesday, on Karachi time.
+- 🕒 **Order within opening hours.** The restaurant is open daily from 12 noon to 3 AM. When it's
+  closed, the site tells you and lets you schedule for later.
+
+## How to use it
+
+1. Open the **Menu** from the top bar.
+2. **Pick an item** to open its popup (on a phone, it slides up from the bottom).
+3. **Choose an option** (Single, Double or Meal), then add any extras or a note.
+4. Tap **Add to cart**, then open the cart from the bag icon.
+5. Tap **Checkout**, fill in your name, mobile number and address, and keep **Cash on Delivery**.
+6. Tap **Place order** and **track your order** on the confirmation page.
 
 ## Tech stack
 
-Next.js 16 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS 4 · Zustand 5 ·
-React Hook Form + Zod 4 · motion · lucide-react · Vitest · Playwright + axe-core
+![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?logo=tailwindcss&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Motion_(Framer_Motion)-0055FF?logo=framer&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand-443E38)
+![React Hook Form](https://img.shields.io/badge/React_Hook_Form-EC5990?logo=reacthookform&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod_4-3E67B1?logo=zod&logoColor=white)
+![Playwright](https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white)
 
-## Getting started
+| Tool | Why |
+|---|---|
+| **Next.js 16 (App Router)** | Pages are rendered on the server, so they load fast and search engines can read them. |
+| **TypeScript (strict)** | Every menu item, cart line and order is typed, so mistakes are caught before they reach users. |
+| **Tailwind CSS 4** | One set of brand colours and spacing used everywhere, which keeps the design consistent. |
+| **Motion (Framer Motion)** | Powers the fly-to-cart animation. Other effects are plain CSS, and all motion respects "Reduce motion". |
+| **Zustand** | A tiny store that keeps your cart and favourites saved between visits. |
+| **React Hook Form** | Fast, accessible forms that don't re-render on every keystroke. |
+| **Zod** | One set of rules for checking names, phone numbers and addresses, reusable by the backend. |
+| **Playwright** | Real-browser tests of the ordering journey on phone, tablet, laptop and large screens. |
 
-Requires Node.js 20.9+ (tested on 24).
+## Quality
 
-```bash
+| Lighthouse | Score |
+|---|---|
+| Accessibility | **100** |
+| Best Practices | **100** |
+| SEO | **100** |
+| Performance (desktop) | **93** home / **90** menu |
+
+- ✅ **67 unit tests** (Vitest): pricing, discounts, Karachi time, validation, cart.
+- ✅ **164 browser tests** (Playwright): the full order flow, keyboard-only use and reduced motion,
+  plus an automated accessibility scan (WCAG 2.1 AA) at 360, 768, 1280 and 1920 px.
+- Performance on mobile was 71 / 72 on a local laptop's simulated slow phone. It will be re-measured
+  with PageSpeed Insights after deployment.
+
+## Run it locally
+
+You need [Node.js](https://nodejs.org/) 20.9 or newer (tested on 24). In **Command Prompt** or **PowerShell** on Windows:
+
+```bat
+git clone https://github.com/Shuaibali0786/restaurant-karachi-burger-gril.git
+cd restaurant-karachi-burger-gril
 cd frontend
 npm install
-npm run dev          # http://localhost:3000
+npm run dev
 ```
 
-Optional: copy `frontend/.env.example` to `frontend/.env.local` and set `NEXT_PUBLIC_SITE_URL`
-when deploying. It is used for share images, the sitemap and robots.
+Then open **http://localhost:3000** in your browser.
 
-## Scripts
-
-Run these from `frontend/`:
+Other commands, run from `frontend`:
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Development server |
-| `npm run build` / `npm run start` | Production build and server |
-| `npm run lint` | ESLint (zero errors required) |
-| `npm run typecheck` | `tsc --noEmit` |
-| `npm test` | Vitest unit tests (pricing, promos, time zone, validation, stores) |
-| `npm run test:e2e` | Playwright: ordering flow, keyboard, accessibility and responsive checks at 360/768/1280/1920 px |
+| `npm run build` then `npm run start` | Production build and server |
+| `npm run lint` / `npm run typecheck` | Code checks |
+| `npm test` | Unit tests |
+| `npm run test:e2e` | Browser tests (first run `npx playwright install chromium`) |
 
 ## Project structure
 
 ```
-frontend/            Next.js app
-  src/app/           routes (pages, sitemap, robots, OG image, icons)
-  src/components/    UI grouped by area (home, menu, cart, checkout, layout, ui, forms)
-  src/lib/api.ts     the only data entry point, to be swapped for the FastAPI backend
-  src/lib/data/      mock catalogue, promos, site info
-  src/stores/        Zustand stores (cart, favourites, UI)
-  tests/             unit (Vitest) and e2e (Playwright)
-specs/               SpecKit spec, plan, data model, API contracts and tasks
-docs/                project journey and screenshots
-history/             prompt history and decision records
-assets/              source photos and design reference
+frontend/              Next.js website
+  src/app/             pages, sitemap, robots, share image, icons
+  src/components/      UI by area: home, menu, cart, checkout, layout, forms
+  src/lib/api.ts       the one place data comes from (the backend plugs in here)
+  src/lib/data/        demo menu, deals, delivery areas, site info
+  src/stores/          saved cart, favourites and UI state
+  tests/               unit and browser tests
+specs/                 specification, plan, data model, API contract, task list
+docs/                  project journey and screenshots
+history/               prompt history records
 ```
 
-## Backend-ready
+## How it was built
 
-Components never import data directly. They call `@/lib/api`, and an ESLint rule enforces this.
-The draft API contract is in
-[`specs/001-restaurant-frontend/contracts/openapi.yaml`](specs/001-restaurant-frontend/contracts/openapi.yaml).
+This project follows **Spec-Driven Development** with **Spec-Kit Plus**
+and **Claude Code**. The steps were:
 
-## Honesty
+1. Write a constitution, the project's ground rules (for example: no fake ratings or numbers).
+2. Write a specification and resolve open questions with the owner.
+3. Write a technical plan and data model.
+4. Break the plan into 102 tasks.
+5. Build it in 8 phases, each reviewed in the browser before committing.
 
-The site shows no invented statistics or ratings. Testimonials are labelled **"Sample reviews"**
-until real reviews exist, and card star ratings stay hidden until the backend provides real ones.
+- 📖 The full story (what was built in each phase, why each tool was chosen, and the problems solved)
+  is in [`docs/PROJECT-JOURNEY.md`](docs/PROJECT-JOURNEY.md).
+- 📐 The spec, plan, data model, API contract and tasks are in
+  [`specs/001-restaurant-frontend/`](specs/001-restaurant-frontend/).
 
-## More
+## Roadmap
 
-For how it was built, phase by phase, including the problems solved and the Lighthouse results, see
-[`docs/PROJECT-JOURNEY.md`](docs/PROJECT-JOURNEY.md).
+- [x] **Phase 1: Frontend.** The complete ordering website (this repo, today).
+- [ ] **Phase 2: Backend** with FastAPI, SQLModel and Neon Postgres. It will add real orders, an
+  admin panel for the kitchen, customer accounts and real reviews.
+- [ ] **Phase 3: Deployment** on Vercel.
+
+## Honest note
+
+- **Orders are demo-only for now.** They are saved in your browser, not sent to the restaurant,
+  until the backend is live. The order tracker is a demo too.
+- **Reviews on the home page are samples** and are labelled that way. Real reviews will come with
+  the backend.
+
+## Author
+
+**Shuaib Ali**
+
+- GitHub: [@Shuaibali0786](https://github.com/Shuaibali0786)
+- LinkedIn: _add your LinkedIn profile link here_

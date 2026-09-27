@@ -198,11 +198,11 @@ into `docs/screenshots/`.
 | Home | ![Home on a phone](screenshots/home-mobile-360.jpg) | ![Home on desktop](screenshots/home-desktop-1280.jpg) |
 | Menu | ![Menu on a phone](screenshots/menu-mobile-360.jpg) | ![Menu on desktop](screenshots/menu-desktop-1280.jpg) |
 | Checkout | ![Checkout on a phone](screenshots/checkout-mobile-360.jpg) | ![Checkout on desktop](screenshots/checkout-desktop-1280.jpg) |
+| Item view | ![Item bottom sheet on a phone](screenshots/item-mobile-360.jpg) | ![Item dialog on desktop](screenshots/item-desktop-1280.jpg) |
+| Cart | ![Cart drawer on a phone](screenshots/cart-mobile-360.jpg) | ![Cart drawer on desktop](screenshots/cart-desktop-1280.jpg) |
+| Order tracker | ![Order confirmation on a phone](screenshots/order-mobile-360.jpg) | ![Order confirmation on desktop](screenshots/order-desktop-1280.jpg) |
 | About | ![About on a phone](screenshots/about-mobile-360.jpg) | ![About on desktop](screenshots/about-desktop-1280.jpg) |
 
-Placeholders to add by hand:
+Placeholder to add by hand:
 
-- _[Screenshot: item bottom sheet on a phone with "Double" selected]_
-- _[Screenshot: cart drawer with the free-delivery progress bar]_
-- _[Screenshot: order confirmation with the live tracker]_
 - _[Screenshot: branded 404 page]_
