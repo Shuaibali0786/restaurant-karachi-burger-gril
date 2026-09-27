@@ -5,8 +5,8 @@ order already placed."""
 from sqlmodel import Session, select
 
 from app.core.errors import AppError
-from app.models import MenuItem
-from app.schemas.admin_catalog import AdminMenuItemOut, MenuItemPatch
+from app.models import DeliveryArea, MenuItem
+from app.schemas.admin_catalog import AdminAreaOut, AdminMenuItemOut, AreaPatch, MenuItemPatch
 
 
 def _out(item: MenuItem) -> AdminMenuItemOut:
@@ -39,3 +39,26 @@ def patch_item(session: Session, slug: str, patch: MenuItemPatch) -> AdminMenuIt
     session.commit()
     session.refresh(item)
     return _out(item)
+
+
+def _area_out(area: DeliveryArea) -> AdminAreaOut:
+    return AdminAreaOut(id=area.id, name=area.name, fee=area.fee, enabled=area.is_enabled, order=area.sort_order)
+
+
+def list_all_areas(session: Session) -> list[AdminAreaOut]:
+    areas = sorted(session.exec(select(DeliveryArea)).all(), key=lambda a: a.sort_order)
+    return [_area_out(a) for a in areas]
+
+
+def patch_area(session: Session, area_id: str, patch: AreaPatch) -> AdminAreaOut:
+    area = session.get(DeliveryArea, area_id)
+    if area is None:
+        raise AppError("NOT_FOUND", "We couldn't find that delivery area.")
+    if patch.fee is not None:
+        area.fee = patch.fee
+    if patch.enabled is not None:
+        area.is_enabled = patch.enabled
+    session.add(area)
+    session.commit()
+    session.refresh(area)
+    return _area_out(area)

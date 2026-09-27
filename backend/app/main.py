@@ -11,8 +11,12 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import health, menu, orders
+from app.api.routes import auth, health, menu, orders
+from app.api.routes.admin import areas as admin_areas
+from app.api.routes.admin import auth as admin_auth
 from app.api.routes.admin import menu as admin_menu
+from app.api.routes.admin import orders as admin_orders
+from app.api.routes.admin import summary as admin_summary
 from app.core.config import get_settings
 from app.core.errors import envelope, install_error_handlers
 from app.core.rate_limit import limiter
@@ -91,7 +95,13 @@ def create_app() -> FastAPI:
     app.include_router(health.router)  # /health and /healthz at the root too, for host health checks
     app.include_router(menu.router, prefix=API_PREFIX)
     app.include_router(orders.router, prefix=API_PREFIX)
-    app.include_router(admin_menu.router, prefix=f"{API_PREFIX}/admin")
+    app.include_router(auth.router, prefix=API_PREFIX)
+    admin_prefix = f"{API_PREFIX}/admin"
+    app.include_router(admin_auth.router, prefix=admin_prefix)
+    app.include_router(admin_menu.router, prefix=admin_prefix)
+    app.include_router(admin_areas.router, prefix=admin_prefix)
+    app.include_router(admin_orders.router, prefix=admin_prefix)
+    app.include_router(admin_summary.router, prefix=admin_prefix)
     return app
 
 

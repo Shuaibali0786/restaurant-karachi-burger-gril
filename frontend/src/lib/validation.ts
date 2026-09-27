@@ -83,6 +83,8 @@ export const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+export type LoginFormValues = z.output<typeof loginSchema>;
+
 export const signupSchema = z
   .object({
     name,

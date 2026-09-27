@@ -371,9 +371,25 @@ def get_order_view(session: Session, number: int, viewer_user: User | None) -> O
     return _load_order_bundle(session, order, viewer=viewer)
 
 
-def change_status(session: Session, order: Order, new_status: str, *, changed_by: uuid.UUID | None) -> OrderOut:
+def change_status(
+    session: Session,
+    order: Order,
+    new_status: str,
+    *,
+    changed_by: uuid.UUID | None,
+    expected_status: str | None = None,
+) -> OrderOut:
     """Moves an order forward one step, or to `cancelled` from any non-terminal status (data-model.md
-    state machine). `changed_by` is the admin's user id, or None for a system/CLI change."""
+    state machine). `changed_by` is the admin's user id, or None for a system/CLI change.
+    `expected_status`, when given, guards against two staff changing the same order at once: if the
+    order has already moved on since the caller last read it, this raises INVALID_TRANSITION with the
+    real current status instead of silently applying a decision made on stale information."""
+    if expected_status is not None and order.status != expected_status:
+        raise AppError(
+            "INVALID_TRANSITION",
+            "Someone else already updated this order. Here is its current status.",
+            details={"currentStatus": order.status},
+        )
     if order.status in _TERMINAL_STATUSES:
         raise AppError(
             "INVALID_TRANSITION",

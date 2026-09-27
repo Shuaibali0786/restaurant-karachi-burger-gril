@@ -28,3 +28,22 @@ class MenuItemPatch(CamelRequest):
         if self.base_price is None and self.available is None and self.sold_out is None:
             raise ValueError("Provide at least one of basePrice, available or soldOut.")
         return self
+
+
+class AdminAreaOut(CamelModel):
+    id: str
+    name: str
+    fee: int
+    enabled: bool
+    order: int
+
+
+class AreaPatch(CamelRequest):
+    fee: int | None = Field(default=None, ge=0, le=2_000)
+    enabled: bool | None = None
+
+    @model_validator(mode="after")
+    def _at_least_one_field(self) -> "AreaPatch":
+        if self.fee is None and self.enabled is None:
+            raise ValueError("Provide at least one of fee or enabled.")
+        return self

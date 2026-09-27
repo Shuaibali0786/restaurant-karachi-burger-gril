@@ -17,6 +17,7 @@ export const ROUTES = [
   "/track",
   "/cart",
   "/checkout",
+  "/admin/login",
   "/this-page-does-not-exist",
 ];
 

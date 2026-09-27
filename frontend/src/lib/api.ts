@@ -10,16 +10,22 @@ import { ApiError } from "@/lib/api-error";
 import { request } from "@/lib/http";
 import { loadOrder, loadOrders, saveOrder } from "@/lib/local-orders";
 import type {
+  AdminArea,
+  AdminMenuItem,
+  AdminOrderSummary,
   Category,
   DeliveryAreaOption,
   FeaturedPlacement,
   MenuItemView,
   MenuQuery,
   Order,
+  OrderStatus,
   PlaceOrderInput,
   Promo,
+  SessionUser,
   SiteInfo,
   Testimonial,
+  TodaySummary,
 } from "@/lib/types";
 
 export async function getSiteInfo(): Promise<SiteInfo> {
@@ -152,4 +158,64 @@ export async function sendContactMessage(_input: { name: string; phone: string; 
 export async function subscribeNewsletter(_email: string): Promise<{ status: "subscribed" }> {
   await pause();
   return { status: "subscribed" };
+}
+
+/* ------------------------------------------------------------------ admin */
+
+export async function adminLogin(input: { identifier: string; password: string }): Promise<SessionUser> {
+  return request<SessionUser>("/admin/auth/login", { method: "POST", body: input });
+}
+
+/** The signed-in customer or admin, or `null` if no one is signed in (never throws for that case). */
+export async function getSession(): Promise<SessionUser | null> {
+  try {
+    return await request<SessionUser>("/auth/me");
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "UNAUTHENTICATED") return null;
+    throw error;
+  }
+}
+
+export async function logout(): Promise<void> {
+  await request<void>("/auth/logout", { method: "POST" });
+}
+
+export async function getAdminOrders(params: { date?: string; status?: OrderStatus; since?: string } = {}): Promise<AdminOrderSummary[]> {
+  return request<AdminOrderSummary[]>("/admin/orders", { query: params });
+}
+
+export async function getAdminOrder(id: string): Promise<Order> {
+  return request<Order>(`/admin/orders/${encodeURIComponent(id)}`);
+}
+
+/** Moves an order forward one step, or cancels it. `expectedStatus` guards against another admin
+ * having already changed it (409 INVALID_TRANSITION with the real current status). */
+export async function setOrderStatus(id: string, status: OrderStatus, expectedStatus: OrderStatus): Promise<Order> {
+  return request<Order>(`/admin/orders/${encodeURIComponent(id)}/status`, {
+    method: "PATCH",
+    body: { status, expectedStatus },
+  });
+}
+
+export async function getTodaySummary(): Promise<TodaySummary> {
+  return request<TodaySummary>("/admin/summary/today");
+}
+
+export async function getAdminMenuItems(): Promise<AdminMenuItem[]> {
+  return request<AdminMenuItem[]>("/admin/menu-items");
+}
+
+export async function updateMenuItem(
+  slug: string,
+  patch: Partial<{ basePrice: number; available: boolean; soldOut: boolean }>,
+): Promise<AdminMenuItem> {
+  return request<AdminMenuItem>(`/admin/menu-items/${encodeURIComponent(slug)}`, { method: "PATCH", body: patch });
+}
+
+export async function getAdminAreas(): Promise<AdminArea[]> {
+  return request<AdminArea[]>("/admin/delivery-areas");
+}
+
+export async function updateArea(id: string, patch: Partial<{ fee: number; enabled: boolean }>): Promise<AdminArea> {
+  return request<AdminArea>(`/admin/delivery-areas/${encodeURIComponent(id)}`, { method: "PATCH", body: patch });
 }

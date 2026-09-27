@@ -225,6 +225,24 @@ export interface TodaySummary {
   byStatus: Partial<Record<OrderStatus, number>>;
 }
 
+export interface AdminMenuItem {
+  slug: string;
+  name: string;
+  category: CategorySlug;
+  basePrice: number;
+  /** Shown in menu lists; false = hidden from customers entirely. */
+  available: boolean;
+  soldOut: boolean;
+}
+
+export interface AdminArea {
+  id: string;
+  name: string;
+  fee: number;
+  enabled: boolean;
+  order: number;
+}
+
 export interface ContactMessage {
   id: number;
   name: string;
