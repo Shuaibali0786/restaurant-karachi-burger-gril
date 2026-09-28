@@ -288,3 +288,36 @@ approve or reject reviews. Once approved reviews exist, the home page shows them
 - Owner approval of the Phase 1 frontend (constitution build order) — given by requesting this phase.
 - A hosted database account for the central store, provisioned by the owner. Credentials are supplied via the uncommitted environment file.
 - The existing frontend data layer (`frontend/src/lib/api.ts`) as the single seam that switches from sample data to the live service.
+
+
+---
+
+## Acceptance status (recorded 2026-09-28)
+
+How each story was checked. "Automated" means a test that ran and passed against a real Postgres (the
+integration suite runs on a separate scratch database) or in a real browser against the running backend.
+"Manual" means done by hand against the real Neon development database.
+
+| Story | Scenarios | Evidence |
+|---|---|---|
+| US2 Menu from the database | 1–4 | Automated: seed data drift guard (`npm run export:backend-data -- --check`), `test_menu_api.py`, `admin-catalog.spec.ts`. **Scenario 1 also needs an owner side-by-side look** at the pages (SC-001). |
+| US1 Real orders | 1–8 | Automated: `test_orders_api.py`, `test_pricing*.py` (server matches the website's own numbers), `order-flow.spec.ts`. Scenario 2: the server **refuses** an order that carries a price field (422) rather than silently ignoring it, which is stricter than the scenario and equally safe. |
+| US3 Tracking | 1–6 | Automated: `test_tracking_api.py`, `usePolling.test.ts`, `order-lifecycle.spec.ts`. Manual: status changes reached an open tracker tab within 15 s with no reload. |
+| US4 Admin orders | 1–5 | Automated: `test_admin_orders_api.py`, `test_transitions.py`, `order-lifecycle.spec.ts`, admin page accessibility sweep. |
+| US5 Accounts | 1–7 | Automated: `test_auth_api.py`, `test_me_api.py`, `account.spec.ts` (includes guest checkout). |
+| US6 Areas, messages | 1–4 | Automated: `test_admin_catalog_api.py`, `test_content_api.py`, `admin-catalog.spec.ts`, `admin-messages.spec.ts`. |
+| US7 Reviews | 1–4 | Automated: `test_reviews_api.py`, `reviews.spec.ts`. Scenario 1: the comment is **required** (3–500 characters) rather than optional, because it is shown as a quote on the home page. |
+
+| Success criterion | Status |
+|---|---|
+| SC-001 identical look | Needs the owner's visual check. Customer screens were not restyled; only the navbar account icon and My orders were added. |
+| SC-002 tampered prices | Met (automated). |
+| SC-003 cart to order in under 2 min, 95% of submissions under 2 s | Not formally timed. Order placement took about 1–3 s against the remote development database. Re-measure on the deployed site. |
+| SC-004 changes within 15 s | Met by design (15 s polling) and shown in the lifecycle test. |
+| SC-005 staff act in under 30 s | Not timed; the flow is alert, one click to open, one click to move on. Try it live. |
+| SC-006 re-order in 3 taps or fewer | Met: My orders, then Order again. |
+| SC-007 no secrets in history, admin refusal, login limit | Met (see the security check in the journey document). |
+| SC-008 reviews only from delivered, approved orders | Met (automated). |
+| SC-009 journey entry | Done: section 8 of `docs/PROJECT-JOURNEY.md`. |
+
+**Owner approval of Phase 2 is still to be given** (Constitution: phase completion requires it).

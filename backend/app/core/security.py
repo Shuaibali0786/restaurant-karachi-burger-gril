@@ -12,6 +12,10 @@ from pwdlib.exceptions import UnknownHashError
 from app.core.config import get_settings
 
 COOKIE_NAME = "kbg_session"
+# A harmless companion cookie the page scripts CAN read. It only says "a session probably exists", so
+# the site can skip asking who is signed in for every guest page view. It carries no secret and grants
+# nothing: the httpOnly session cookie and the API remain the only authority.
+HINT_COOKIE_NAME = "kbg_auth"
 ALGORITHM = "HS256"
 
 _hasher = PasswordHash.recommended()
@@ -66,8 +70,18 @@ def set_session_cookie(response: Response, token: str) -> None:
         samesite="lax",
         path="/",
     )
+    response.set_cookie(
+        HINT_COOKIE_NAME,
+        "1",
+        max_age=settings.jwt_expire_days * 86_400,
+        httponly=False,
+        secure=settings.cookie_secure,
+        samesite="lax",
+        path="/",
+    )
 
 
 def clear_session_cookie(response: Response) -> None:
     settings = get_settings()
     response.delete_cookie(COOKIE_NAME, path="/", httponly=True, secure=settings.cookie_secure, samesite="lax")
+    response.delete_cookie(HINT_COOKIE_NAME, path="/", secure=settings.cookie_secure, samesite="lax")

@@ -85,3 +85,19 @@ def test_signup_is_limited_to_five_per_hour(client: TestClient):
     for index in range(5):
         assert _signup(client, email=f"n{index}@example.com").status_code == 201
     assert _signup(client, email="n6@example.com").status_code == 429
+
+
+def test_a_readable_hint_cookie_accompanies_the_session_and_goes_away_on_logout(client: TestClient):
+    _signup(client, email="hint@example.com")
+    assert client.cookies.get("kbg_auth") == "1"
+    set_cookies = [c.lower() for c in client.get("/api/v1/auth/me").headers.get_list("set-cookie")]
+    assert set_cookies == []  # nothing new to set on a plain read
+    client.post("/api/v1/auth/logout")
+    assert client.cookies.get("kbg_auth") is None
+
+
+def test_the_hint_cookie_is_readable_by_scripts_but_the_session_cookie_is_not(client: TestClient):
+    response = _signup(client, email="flags@example.com")
+    by_name = {c.split("=")[0]: c.lower() for c in response.headers.get_list("set-cookie")}
+    assert "httponly" in by_name["kbg_session"]
+    assert "httponly" not in by_name["kbg_auth"]

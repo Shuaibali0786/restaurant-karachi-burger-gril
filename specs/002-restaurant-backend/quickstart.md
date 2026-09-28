@@ -45,6 +45,7 @@ ADMIN_NAME=Restaurant Admin
 FRONTEND_URL=http://localhost:3000                   # CORS + Origin check; comma-separate for more than one
 TRUST_PROXY=false                                    # true in production behind Vercel/Render
 RATELIMIT_STORAGE_URI=memory://
+RATELIMIT_ENABLED=true                               # false only for automated browser test runs
 FREE_DELIVERY_THRESHOLD=1500
 LOG_LEVEL=info
 ```
@@ -113,3 +114,7 @@ npm run test:e2e                           # needs the backend running and seede
 7. **US7 Reviews**: mark an order Delivered, then review it from "My orders". Approve it in
    `/admin/reviews`. After 3 approvals the home page shows the real reviews without the "Sample
    reviews" label.
+
+## 6. Putting it online
+
+See [`docs/DEPLOYMENT.md`](../../docs/DEPLOYMENT.md) (Render for the backend, Vercel for the website).

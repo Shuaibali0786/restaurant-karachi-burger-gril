@@ -25,13 +25,17 @@ def client_ip(request: Request) -> str:
 
 def _build_limiter() -> Limiter:
     settings = get_settings()
-    return Limiter(
+    limiter = Limiter(
         key_func=client_ip,
         storage_uri=settings.ratelimit_storage_uri,
         strategy="moving-window",
         enabled=settings.ratelimit_enabled,
         headers_enabled=False,
     )
+    # slowapi lets a RATELIMIT_ENABLED environment variable override the argument above and keeps it
+    # as text, so the string "false" would still count as switched on. Pin it to the real boolean.
+    limiter.enabled = settings.ratelimit_enabled
+    return limiter
 
 
 limiter = _build_limiter()

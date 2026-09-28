@@ -81,7 +81,7 @@ def test_reorder_rebuilds_lines_and_reports_skipped_items(client: TestClient, db
         {"itemSlug": "burns-road-zinger", "optionId": "single", "addonIds": [], "note": "no onions", "quantity": 2}
     ]
 
-    item = db_session.get(MenuItem, "burns-road-zinger")
+    item = db_session.exec(select(MenuItem).where(MenuItem.slug == "burns-road-zinger")).one()
     item.is_sold_out = True
     db_session.add(item)
     db_session.commit()

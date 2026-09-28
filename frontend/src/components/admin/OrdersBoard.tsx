@@ -98,7 +98,7 @@ function OrdersList({ status, date }: { status: OrderStatus | ""; date: string }
                 onClick={() => dismiss(order.id)}
                 className={cn(
                   "flex min-h-16 flex-wrap items-center justify-between gap-3 rounded-card bg-white p-4 shadow-card ring-1 ring-cream-200 transition hover:ring-ember-500 sm:flex-nowrap",
-                  newIds.has(order.id) && "ring-2 ring-flame-400 motion-safe:animate-[pulse_2s_ease-in-out_2]",
+                  newIds.has(order.id) && "ring-2 ring-flame-400 motion-safe:animate-order-flash",
                 )}
               >
                 <div className="min-w-0">

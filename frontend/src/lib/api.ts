@@ -1,7 +1,7 @@
 /**
  * The single data entry point for screens and components (Constitution IX).
  * Menu, ordering and tracking (this file's `get*`/`placeOrder` functions) now call the FastAPI
- * backend through `lib/http.ts`; only testimonials still use mock data until reviews land.
+ * backend through `lib/http.ts`; the built-in sample testimonials are only a fallback if it is unreachable.
  * See specs/002-restaurant-backend/contracts/frontend-api.md.
  */
 import { site } from "@/lib/data/site";

@@ -19,6 +19,12 @@ interface SessionState {
 export const useSession = create<SessionState>((set) => ({
   user: undefined,
   load: async () => {
+    // The backend sets a readable "kbg_auth" hint next to the httpOnly session cookie. Without it
+    // there is nobody to look up, so guests make no request (and log no 401) on every page.
+    if (typeof document !== "undefined" && !document.cookie.split("; ").includes("kbg_auth=1")) {
+      set({ user: null });
+      return null;
+    }
     const user = await getSession();
     set({ user });
     return user;

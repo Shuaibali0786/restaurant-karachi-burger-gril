@@ -1,8 +1,10 @@
 import uuid
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
+from app.core import clock
 from app.models import Order, User
 from app.services import orders as orders_service
 from tests.conftest import make_user, sign_in
@@ -130,7 +132,8 @@ def test_samples_until_three_approved_then_real_reviews_only(client: TestClient,
     real = client.get("/api/v1/testimonials").json()
     assert len(real) == 3 and not any(t["isSample"] for t in real)
     assert {t["area"] for t in real} == {"Clifton"}
-    assert all(t["month"] == "2026-10" for t in real)
+    # The review is stamped by the database clock (not the frozen test clock): this month, Pakistan time.
+    assert all(t["month"] == datetime.now(clock.PKT).strftime("%Y-%m") for t in real)
     assert all(t["name"].endswith(".") or " " not in t["name"] for t in real)
 
     sign_in(client, admin)

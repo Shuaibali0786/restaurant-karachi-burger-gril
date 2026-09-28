@@ -129,10 +129,10 @@ def test_delivery_fee_matches_the_chosen_area_and_free_delivery_kicks_in_at_1500
             lines=[
                 {
                     "itemSlug": "grand-combo",
-                    "optionId": "single",
+                    "optionId": "regular",
                     "addonIds": [],
                     "note": "",
-                    "quantity": 1,
+                    "quantity": 2,  # Rs 1,490 alone is just under the Rs 1,500 free-delivery line
                     "addedAt": "2026-10-01T12:00:00Z",
                 }
             ],

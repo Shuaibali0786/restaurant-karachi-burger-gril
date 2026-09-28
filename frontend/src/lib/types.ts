@@ -1,6 +1,6 @@
 /**
- * Domain types — the contract shared by the mock data layer (Phase 1) and the
- * FastAPI backend (Phase 2). See specs/001-restaurant-frontend/data-model.md.
+ * Domain types — the contract shared by the frontend and the
+ * FastAPI backend (contracts/openapi.yaml). See specs/001-restaurant-frontend/data-model.md.
  * All money values are integer rupees (PKR).
  */
 

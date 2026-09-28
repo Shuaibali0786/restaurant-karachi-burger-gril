@@ -104,10 +104,13 @@ def test_admin_can_mark_an_item_sold_out(admin_client):
     assert public["soldOut"] is True
 
 
-def test_admin_menu_endpoints_refuse_guests_and_customers(client, customer_client):
-    assert client.get("/api/v1/admin/menu-items").status_code == 401
-    assert client.patch("/api/v1/admin/menu-items/burns-road-zinger", json={"soldOut": True}).status_code == 401
+def test_admin_menu_endpoints_refuse_guests_and_customers(customer_client):
     assert customer_client.get("/api/v1/admin/menu-items").status_code == 403
+    customer_client.cookies.clear()  # `customer_client` is the same client, now a guest again
+    assert customer_client.get("/api/v1/admin/menu-items").status_code == 401
+    assert (
+        customer_client.patch("/api/v1/admin/menu-items/burns-road-zinger", json={"soldOut": True}).status_code == 401
+    )
 
 
 def test_admin_patch_rejects_an_empty_body_and_an_unknown_item(admin_client):
