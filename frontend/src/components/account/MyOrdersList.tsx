@@ -12,6 +12,7 @@ import { useSession } from "@/stores/session";
 import { ButtonLink } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { OrderAgainButton } from "@/components/account/OrderAgainButton";
+import { ReviewForm } from "@/components/account/ReviewForm";
 
 const STATUS_LABEL: Record<Order["status"], string> = {
   confirmed: "Confirmed",
@@ -93,7 +94,8 @@ export function MyOrdersList() {
           <p className="mt-2 text-sm text-ink-600">
             {order.lines.map((line) => `${line.quantity} × ${line.name}`).join(", ")}
           </p>
-          <div className="mt-3">
+          <div className="mt-3 space-y-3">
+            {order.status === "delivered" && <ReviewForm orderId={order.id} existing={order.review} />}
             <OrderAgainButton orderId={order.id} />
           </div>
         </li>

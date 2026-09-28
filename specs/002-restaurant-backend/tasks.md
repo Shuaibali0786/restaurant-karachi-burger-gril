@@ -252,18 +252,18 @@ Web application per plan.md: `backend/app/{core,models,schemas,services,api/rout
 
 ### Tests for US7
 
-- [ ] T106 [P] [US7] Write `backend/tests/integration/test_reviews_api.py`: a review is refused (`REVIEW_NOT_ALLOWED`) for a non-delivered order, another user's order, a guest order, and a second review on the same order. Rating 0, 6 and a comment over 500 characters return 422. A new review is pending and hidden from `/testimonials`. Admin approve and reject work with 401 and 403 checks. With fewer than 3 approved reviews `/testimonials` returns the sample rows with `isSample: true`. With 3 or more it returns the latest 6 approved as `isSample: false`, using first name plus last initial, the order's area and the month. Rejected and pending reviews never appear.
-- [ ] T107 [P] [US7] Write `frontend/tests/e2e/reviews.spec.ts`: a delivered order shows the review form in "My orders", the review is submitted and shown as "Awaiting approval", and after admin approval of 3 reviews the home page shows real reviews without the "Sample reviews" label.
+- [x] T106 [P] [US7] Write `backend/tests/integration/test_reviews_api.py`: a review is refused (`REVIEW_NOT_ALLOWED`) for a non-delivered order, another user's order, a guest order, and a second review on the same order. Rating 0, 6 and a comment over 500 characters return 422. A new review is pending and hidden from `/testimonials`. Admin approve and reject work with 401 and 403 checks. With fewer than 3 approved reviews `/testimonials` returns the sample rows with `isSample: true`. With 3 or more it returns the latest 6 approved as `isSample: false`, using first name plus last initial, the order's area and the month. Rejected and pending reviews never appear.
+- [x] T107 [P] [US7] Write `frontend/tests/e2e/reviews.spec.ts`: a delivered order shows the review form in "My orders", the review is submitted and shown as "Awaiting approval", and after admin approval of 3 reviews the home page shows real reviews without the "Sample reviews" label.
 
 ### Implementation for US7
 
-- [ ] T108 [P] [US7] Create `backend/app/schemas/reviews.py` (`ReviewInput`, `AdminReview`, `TestimonialOut`).
-- [ ] T109 [US7] Implement `backend/app/services/reviews.py`: `submit_review` (own order, delivered, none yet; catch the unique-constraint race), `moderate`, `list_admin_reviews` (pending first) and `public_testimonials` (the 3-approved threshold, display name as first name plus last initial, month, and sample fallback). Include the caller's review on `OrderOut` for `viewer=owner`.
-- [ ] T110 [US7] Implement `POST /me/orders/{number}/review` in `backend/app/api/routes/me.py`, `GET /testimonials` in `backend/app/api/routes/content.py` and `backend/app/api/routes/admin/reviews.py` (`GET` and `PATCH /admin/reviews…`).
-- [ ] T111 [US7] Switch `getTestimonials` in `frontend/src/lib/api.ts` to the API, and add `submitReview`, `getAdminReviews` and `moderateReview`.
-- [ ] T112 [US7] Update `frontend/src/components/home/Testimonials.tsx` so the "Sample reviews" label and the "real customer reviews coming soon" text show only when the data has `isSample: true`, and real reviews show the month. Layout and styling stay as they are.
-- [ ] T113 [US7] Add `frontend/src/components/account/ReviewForm.tsx` (a star input with keyboard support, an optional comment with a 500-character counter, and pending, approved and rejected states) and show it in `frontend/src/components/account/MyOrdersList.tsx` for Delivered orders without a review.
-- [ ] T114 [US7] Build `frontend/src/app/admin/(panel)/reviews/page.tsx` and `frontend/src/components/admin/ReviewsQueue.tsx` (pending first, with Approve and Reject, and a pending count in the panel nav).
+- [x] T108 [P] [US7] Create `backend/app/schemas/reviews.py` (`ReviewInput`, `AdminReview`, `TestimonialOut`). (The comment is required, 3 to 500 characters, because a real review is shown as a quote on the home page.)
+- [x] T109 [US7] Implement `backend/app/services/reviews.py`: `submit_review` (own order, delivered, none yet; catch the unique-constraint race), `moderate`, `list_admin_reviews` (pending first) and `public_testimonials` (the 3-approved threshold, display name as first name plus last initial, month, and sample fallback). Include the caller's review on `OrderOut` for `viewer=owner`.
+- [x] T110 [US7] Implement `POST /me/orders/{number}/review` in `backend/app/api/routes/me.py`, `GET /testimonials` in `backend/app/api/routes/content.py` and `backend/app/api/routes/admin/reviews.py` (`GET` and `PATCH /admin/reviews…`).
+- [x] T111 [US7] Switch `getTestimonials` in `frontend/src/lib/api.ts` to the API, and add `submitReview`, `getAdminReviews` and `moderateReview`.
+- [x] T112 [US7] Update `frontend/src/components/home/Testimonials.tsx` so the "Sample reviews" label and the "real customer reviews coming soon" text show only when the data has `isSample: true`, and real reviews show the month. Layout and styling stay as they are.
+- [x] T113 [US7] Add `frontend/src/components/account/ReviewForm.tsx` (a star input with keyboard support, an optional comment with a 500-character counter, and pending, approved and rejected states) and show it in `frontend/src/components/account/MyOrdersList.tsx` for Delivered orders without a review.
+- [x] T114 [US7] Build `frontend/src/app/admin/(panel)/reviews/page.tsx` and `frontend/src/components/admin/ReviewsQueue.tsx` (pending first, with Approve and Reject, and a pending count in the panel nav).
 
 **Checkpoint**: All seven user stories work independently and together.
 

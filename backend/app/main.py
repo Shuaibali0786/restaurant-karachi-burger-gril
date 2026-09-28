@@ -17,6 +17,7 @@ from app.api.routes.admin import auth as admin_auth
 from app.api.routes.admin import menu as admin_menu
 from app.api.routes.admin import messages as admin_messages
 from app.api.routes.admin import orders as admin_orders
+from app.api.routes.admin import reviews as admin_reviews
 from app.api.routes.admin import summary as admin_summary
 from app.core.config import get_settings
 from app.core.errors import envelope, install_error_handlers
@@ -106,6 +107,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_orders.router, prefix=admin_prefix)
     app.include_router(admin_summary.router, prefix=admin_prefix)
     app.include_router(admin_messages.router, prefix=admin_prefix)
+    app.include_router(admin_reviews.router, prefix=admin_prefix)
     return app
 
 

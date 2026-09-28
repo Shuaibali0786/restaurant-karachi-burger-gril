@@ -5,7 +5,9 @@ from fastapi import APIRouter, Request
 from app.api.deps import SessionDep
 from app.core.rate_limit import limiter
 from app.schemas.content import ContactMessageInput, NewsletterInput
+from app.schemas.reviews import TestimonialOut
 from app.services import content as content_service
+from app.services import reviews as reviews_service
 
 router = APIRouter(tags=["content"])
 
@@ -30,3 +32,8 @@ def subscribe(
 ) -> dict[str, str]:
     content_service.subscribe(session, body.email)
     return {"status": "subscribed"}
+
+
+@router.get("/testimonials", summary="Approved reviews, or the labelled samples until there are at least three")
+def testimonials(session: SessionDep) -> list[TestimonialOut]:
+    return reviews_service.public_testimonials(session)

@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
-import { Flame, LogOut, MailOpen, MapPin, ReceiptText, UtensilsCrossed } from "lucide-react";
-import { getContactMessages } from "@/lib/api";
+import { Flame, LogOut, MailOpen, MapPin, ReceiptText, Star, UtensilsCrossed } from "lucide-react";
+import { getAdminReviews, getContactMessages } from "@/lib/api";
 import { cn } from "@/lib/cn";
 import { usePolling } from "@/hooks/usePolling";
 import { useSession } from "@/stores/session";
@@ -14,6 +14,7 @@ const links = [
   { href: "/admin/menu", label: "Menu", Icon: UtensilsCrossed },
   { href: "/admin/areas", label: "Areas", Icon: MapPin },
   { href: "/admin/messages", label: "Messages", Icon: MailOpen },
+  { href: "/admin/reviews", label: "Reviews", Icon: Star },
 ];
 
 /**
@@ -41,6 +42,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
     enabled: isAdmin,
   });
   const unreadCount = unread?.length ?? 0;
+  const { data: reviews } = usePolling({ fetcher: getAdminReviews, intervalMs: 60_000, enabled: isAdmin });
+  const pendingReviews = reviews?.filter((review) => review.status === "pending").length ?? 0;
 
   useEffect(() => {
     if (user !== undefined && (user === null || user.role !== "admin")) {
@@ -84,6 +87,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
                     <span className="rounded-full bg-flame-400 px-1.5 text-xs font-black text-charcoal-950">
                       <span className="sr-only">{unreadCount} unread</span>
                       <span aria-hidden="true">{unreadCount}</span>
+                    </span>
+                  )}
+                  {href === "/admin/reviews" && pendingReviews > 0 && (
+                    <span className="rounded-full bg-flame-400 px-1.5 text-xs font-black text-charcoal-950">
+                      <span className="sr-only">{pendingReviews} pending</span>
+                      <span aria-hidden="true">{pendingReviews}</span>
                     </span>
                   )}
                 </Link>

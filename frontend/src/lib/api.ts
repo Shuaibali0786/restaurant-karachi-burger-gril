@@ -13,6 +13,7 @@ import type {
   AdminArea,
   AdminMenuItem,
   AdminOrderSummary,
+  AdminReview,
   CartLine,
   Category,
   ContactMessage,
@@ -24,6 +25,7 @@ import type {
   Order,
   OrderStatus,
   PlaceOrderInput,
+  ReviewStatus,
   Promo,
   SessionUser,
   SiteInfo,
@@ -72,8 +74,14 @@ export async function getPromos(): Promise<Promo[]> {
   return request<Promo[]>("/promos", { cacheable: true });
 }
 
+/** Approved reviews, or the labelled samples until there are at least three. If the API is down the
+ * home page still renders, with the built-in samples (always flagged `isSample`). */
 export async function getTestimonials(): Promise<Testimonial[]> {
-  return testimonials;
+  try {
+    return await request<Testimonial[]>("/testimonials", { cacheable: true });
+  } catch {
+    return testimonials;
+  }
 }
 
 export async function getDeliveryAreas(): Promise<DeliveryAreaOption[]> {
@@ -248,4 +256,18 @@ export async function createArea(input: { name: string; fee: number }): Promise<
 
 export async function deleteArea(id: string): Promise<void> {
   await request<void>(`/admin/delivery-areas/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+/* ------------------------------------------------------------------ reviews */
+
+export async function submitReview(orderId: string, input: { rating: number; comment: string }): Promise<{ rating: number; status: ReviewStatus }> {
+  return request<{ rating: number; status: ReviewStatus }>(`/me/orders/${encodeURIComponent(orderId)}/review`, { method: "POST", body: input });
+}
+
+export async function getAdminReviews(): Promise<AdminReview[]> {
+  return request<AdminReview[]>("/admin/reviews");
+}
+
+export async function moderateReview(id: number, status: "approved" | "rejected"): Promise<AdminReview> {
+  return request<AdminReview>(`/admin/reviews/${id}`, { method: "PATCH", body: { status } });
 }

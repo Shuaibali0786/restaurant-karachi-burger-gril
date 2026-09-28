@@ -7,8 +7,10 @@ from fastapi import APIRouter, Query
 from app.api.deps import CurrentUser, SessionDep
 from app.core.errors import AppError
 from app.schemas.auth import ReorderResult
-from app.schemas.orders import OrderOut
+from app.schemas.orders import OrderOut, ReviewSummaryOut
+from app.schemas.reviews import ReviewInput
 from app.services import orders as orders_service
+from app.services import reviews as reviews_service
 
 router = APIRouter(tags=["me"])
 
@@ -33,3 +35,10 @@ def my_orders(
 @router.post("/me/orders/{number}/reorder", summary="Cart-ready lines from a past order at the current menu")
 def reorder(number: str, session: SessionDep, user: CurrentUser) -> ReorderResult:
     return orders_service.reorder(session, user, _parse_number(number))
+
+
+@router.post(
+    "/me/orders/{number}/review", status_code=201, summary="Review my delivered order (once); starts as pending"
+)
+def review_order(number: str, body: ReviewInput, session: SessionDep, user: CurrentUser) -> ReviewSummaryOut:
+    return reviews_service.submit_review(session, user, _parse_number(number), body)

@@ -25,6 +25,7 @@ from app.schemas.orders import (
     OrderLineOut,
     OrderOut,
     PlaceOrderInput,
+    ReviewSummaryOut,
     StatusEventOut,
     TimingAsapOut,
     TimingOut,
@@ -32,6 +33,7 @@ from app.schemas.orders import (
     TotalsOut,
 )
 from app.services import menu as menu_service
+from app.services import reviews as reviews_service
 from app.services.pricing import (
     CartLineInput,
     PriceAddon,
@@ -175,7 +177,13 @@ def _validate_timing(body: PlaceOrderInput, now: datetime) -> None:
             )
 
 
-def _order_to_out(order: Order, lines: list[OrderLine], events: list[OrderStatusEvent], viewer: str) -> OrderOut:
+def _order_to_out(
+    order: Order,
+    lines: list[OrderLine],
+    events: list[OrderStatusEvent],
+    viewer: str,
+    review: ReviewSummaryOut | None = None,
+) -> OrderOut:
     timing: TimingOut = (
         TimingScheduledOut(slot=order.scheduled_for) if order.timing_type == "scheduled" else TimingAsapOut()
     )
@@ -217,6 +225,7 @@ def _order_to_out(order: Order, lines: list[OrderLine], events: list[OrderStatus
         status=order.status,
         status_history=[StatusEventOut(status=e.to_status, at=e.changed_at) for e in events],
         viewer=viewer,
+        review=review,
     )
 
 
@@ -228,7 +237,11 @@ def _load_order_bundle(session: Session, order: Order, *, viewer: str = "owner")
         session.exec(select(OrderStatusEvent).where(OrderStatusEvent.order_id == order.id)).all(),
         key=lambda e: e.changed_at,  # type: ignore[arg-type,return-value]
     )
-    return _order_to_out(order, lines, events, viewer=viewer)
+    # A customer sees the review they left on their own order (and only they do).
+    review = (
+        reviews_service.summary(reviews_service.get_review_for_order(session, order.id)) if viewer == "owner" else None
+    )
+    return _order_to_out(order, lines, events, viewer=viewer, review=review)
 
 
 def place_order(

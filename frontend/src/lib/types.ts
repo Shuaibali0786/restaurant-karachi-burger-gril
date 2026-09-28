@@ -257,8 +257,9 @@ export interface AdminReview {
   id: number;
   orderId: string;
   customerName: string;
+  areaName: string;
   rating: number;
-  comment?: string;
+  comment?: string | null;
   status: ReviewStatus;
   createdAt: string;
 }
