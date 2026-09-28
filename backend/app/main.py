@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import auth, health, menu, orders
+from app.api.routes import auth, health, me, menu, orders
 from app.api.routes.admin import areas as admin_areas
 from app.api.routes.admin import auth as admin_auth
 from app.api.routes.admin import menu as admin_menu
@@ -96,6 +96,7 @@ def create_app() -> FastAPI:
     app.include_router(menu.router, prefix=API_PREFIX)
     app.include_router(orders.router, prefix=API_PREFIX)
     app.include_router(auth.router, prefix=API_PREFIX)
+    app.include_router(me.router, prefix=API_PREFIX)
     admin_prefix = f"{API_PREFIX}/admin"
     app.include_router(admin_auth.router, prefix=admin_prefix)
     app.include_router(admin_menu.router, prefix=admin_prefix)

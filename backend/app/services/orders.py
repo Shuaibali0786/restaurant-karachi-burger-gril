@@ -18,6 +18,7 @@ from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.normalise import normalise_pk_mobile
 from app.models import DeliveryArea, MenuItem, Order, OrderLine, OrderStatusEvent, Promo, User
+from app.schemas.auth import ReorderLine, ReorderResult
 from app.schemas.orders import (
     OrderCustomerOut,
     OrderDeliveryOut,
@@ -416,3 +417,49 @@ def change_status(
     session.commit()
     session.refresh(order)
     return _load_order_bundle(session, order)
+
+
+def list_my_orders(session: Session, user: User, *, limit: int = 20, before: datetime | None = None) -> list[OrderOut]:
+    """The caller's own orders, newest first. `before` is the placed-at of the last order already shown."""
+    orders = session.exec(select(Order).where(Order.user_id == user.id)).all()
+    if before is not None:
+        orders = [o for o in orders if o.placed_at is not None and o.placed_at < before]
+    orders = sorted(orders, key=lambda o: o.placed_at or clock.now(), reverse=True)[:limit]
+    return [_load_order_bundle(session, order, viewer="owner") for order in orders]
+
+
+def reorder(session: Session, user: User, number: int) -> ReorderResult:
+    """Cart-ready lines from a past order, at today's menu. Lines whose item, option or add-on is
+    gone, hidden or sold out are left out and reported by name. Another account's order is a 404."""
+    order = session.exec(select(Order).where(Order.number == number, Order.user_id == user.id)).first()
+    if order is None:
+        raise AppError("NOT_FOUND", "We couldn't find that order.")
+
+    lines = sorted(
+        session.exec(select(OrderLine).where(OrderLine.order_id == order.id)).all(), key=lambda line: line.position
+    )
+    catalog = _load_orderable_catalog(session)
+    kept: list[ReorderLine] = []
+    skipped: list[str] = []
+    for line in lines:
+        item = catalog.get(line.item_slug)
+        orderable = (
+            item is not None
+            and item.is_available
+            and not item.is_sold_out
+            and line.option_key in item.options
+            and all(key in item.addons for key in line.addon_keys)
+        )
+        if not orderable:
+            skipped.append(line.item_name)
+            continue
+        kept.append(
+            ReorderLine(
+                item_slug=line.item_slug,
+                option_id=line.option_key,
+                addon_ids=list(line.addon_keys),
+                note=line.note,
+                quantity=line.quantity,
+            )
+        )
+    return ReorderResult(lines=kept, skipped=skipped)

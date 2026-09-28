@@ -88,14 +88,25 @@ export type LoginFormValues = z.output<typeof loginSchema>;
 export const signupSchema = z
   .object({
     name,
-    email,
-    phone: pkMobile,
+    email: z.string().trim(),
+    phone: z.string().trim(),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
   })
-  .refine((form) => form.password === form.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Passwords don't match",
+  .superRefine((form, ctx) => {
+    // Either one is enough to sign in with; each must be valid if given.
+    if (!form.email && !form.phone) {
+      ctx.addIssue({ code: "custom", path: ["email"], message: "Add an email or a mobile number" });
+    }
+    if (form.email && !email.safeParse(form.email).success) {
+      ctx.addIssue({ code: "custom", path: ["email"], message: "Enter a valid email address" });
+    }
+    if (form.phone && !pkMobile.safeParse(form.phone).success) {
+      ctx.addIssue({ code: "custom", path: ["phone"], message: "Enter a Pakistani mobile number like 0300-1234567" });
+    }
+    if (form.password !== form.confirmPassword) {
+      ctx.addIssue({ code: "custom", path: ["confirmPassword"], message: "Passwords don't match" });
+    }
   });
 
 export const newsletterSchema = z.object({ email });

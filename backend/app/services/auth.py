@@ -1,13 +1,15 @@
-"""Signs customers and admins in. Signup is User Story 5; this covers login only."""
+"""Signs customers and admins in, and creates customer accounts."""
 
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from app.core import clock
 from app.core.errors import AppError
 from app.core.normalise import normalise_email, normalise_pk_mobile
 from app.core.rate_limit import login_guard
-from app.core.security import verify_password
+from app.core.security import hash_password, verify_password
 from app.models import User
+from app.schemas.auth import SignupInput
 
 _GENERIC_ERROR = "The email/phone or password is incorrect."
 
@@ -46,5 +48,49 @@ def authenticate(session: Session, identifier: str, password: str, *, ip: str, r
     user.last_login_at = clock.now()
     session.add(user)
     session.commit()
+    session.refresh(user)
+    return user
+
+
+def signup(session: Session, data: SignupInput) -> User:
+    """Creates a `customer` account (never any other role). Email and phone are each unique; the
+    unique constraints also settle a race between two simultaneous signups."""
+    email = None
+    if data.email and data.email.strip():
+        email = normalise_email(data.email)
+        if email is None:
+            raise AppError(
+                "VALIDATION_FAILED", "Please check your details.", fields={"email": "Enter a valid email address."}
+            )
+    phone = None
+    if data.phone and data.phone.strip():
+        phone = normalise_pk_mobile(data.phone)
+        if phone is None:
+            raise AppError(
+                "VALIDATION_FAILED",
+                "Please check your details.",
+                fields={"phone": "Enter a valid Pakistani mobile number."},
+            )
+
+    exists = AppError("ACCOUNT_EXISTS", "An account with that email or mobile number already exists. Try logging in.")
+    if email and session.exec(select(User).where(User.email == email)).first():
+        raise exists
+    if phone and session.exec(select(User).where(User.phone == phone)).first():
+        raise exists
+
+    user = User(
+        name=data.name.strip(),
+        email=email,
+        phone=phone,
+        password_hash=hash_password(data.password),
+        role="customer",
+        last_login_at=clock.now(),
+    )
+    session.add(user)
+    try:
+        session.commit()
+    except IntegrityError as error:
+        session.rollback()
+        raise exists from error
     session.refresh(user)
     return user

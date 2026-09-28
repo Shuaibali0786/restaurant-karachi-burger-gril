@@ -13,6 +13,7 @@ import type {
   AdminArea,
   AdminMenuItem,
   AdminOrderSummary,
+  CartLine,
   Category,
   DeliveryAreaOption,
   FeaturedPlacement,
@@ -136,18 +137,29 @@ export async function getRecentOrders(): Promise<Order[]> {
   return orders.filter((order): order is Order => order !== null);
 }
 
-/*
- * Accounts, contact messages and the newsletter are UI-only in this phase
- * (Constitution IX): nothing is sent or stored. Phase 2 connects the backend.
- */
-export async function login(_input: { identifier: string; password: string }): Promise<{ status: "coming-soon" }> {
-  await pause();
-  return { status: "coming-soon" };
+/* ------------------------------------------------------------------ accounts */
+
+export async function login(input: { identifier: string; password: string }): Promise<SessionUser> {
+  return request<SessionUser>("/auth/login", { method: "POST", body: input });
 }
 
-export async function signup(_input: { name: string; email: string; phone: string; password: string }): Promise<{ status: "coming-soon" }> {
-  await pause();
-  return { status: "coming-soon" };
+/** Email and phone are each optional, but the form (and the server) require at least one. */
+export async function signup(input: { name: string; email?: string; phone?: string; password: string }): Promise<SessionUser> {
+  const body = { name: input.name, email: input.email || undefined, phone: input.phone || undefined, password: input.password };
+  return request<SessionUser>("/auth/signup", { method: "POST", body });
+}
+
+export async function getMyOrders(before?: string): Promise<Order[]> {
+  return request<Order[]>("/me/orders", { query: { before } });
+}
+
+export interface ReorderResult {
+  lines: Array<Pick<CartLine, "itemSlug" | "optionId" | "addonIds" | "note" | "quantity">>;
+  skipped: string[];
+}
+
+export async function reorder(id: string): Promise<ReorderResult> {
+  return request<ReorderResult>(`/me/orders/${encodeURIComponent(id)}/reorder`, { method: "POST" });
 }
 
 export async function sendContactMessage(_input: { name: string; phone: string; email: string; message: string }): Promise<{ status: "received" }> {

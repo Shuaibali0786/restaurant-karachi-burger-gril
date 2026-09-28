@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useId } from "react";
-import { ArrowRight, Heart, UserRound, X } from "lucide-react";
+import { ArrowRight, Heart, LogOut, ShieldCheck, UserRound, X } from "lucide-react";
 import type { NavLink } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { useModalDialog } from "@/hooks/useModalDialog";
+import { useSession } from "@/stores/session";
 import { ButtonLink } from "@/components/ui/Button";
 import { Logo } from "@/components/layout/Logo";
 
@@ -21,6 +22,8 @@ interface MobileMenuProps {
 export function MobileMenu({ id, open, onClose, links, isActive, hours }: MobileMenuProps) {
   const { ref, close, onBackdropClick } = useModalDialog(open, onClose);
   const titleId = useId();
+  const user = useSession((state) => state.user);
+  const logout = useSession((state) => state.logout);
 
   return (
     <dialog
@@ -81,16 +84,53 @@ export function MobileMenu({ id, open, onClose, links, isActive, hours }: Mobile
           >
             Favourites
           </ButtonLink>
-          <ButtonLink
-            href="/login"
-            variant="secondary"
-            size="lg"
-            onClick={close}
-            icon={<UserRound aria-hidden="true" className="size-5" />}
-            className="w-full text-cream-50"
-          >
-            Log in
-          </ButtonLink>
+          {user ? (
+            <>
+              {user.role === "admin" && (
+                <ButtonLink
+                  href="/admin"
+                  variant="secondary"
+                  size="lg"
+                  onClick={close}
+                  icon={<ShieldCheck aria-hidden="true" className="size-5" />}
+                  className="w-full text-cream-50"
+                >
+                  Admin
+                </ButtonLink>
+              )}
+              <ButtonLink
+                href="/account/orders"
+                variant="secondary"
+                size="lg"
+                onClick={close}
+                icon={<UserRound aria-hidden="true" className="size-5" />}
+                className="w-full text-cream-50"
+              >
+                My orders
+              </ButtonLink>
+              <button
+                type="button"
+                onClick={() => {
+                  void logout();
+                  close();
+                }}
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full font-bold text-sand-300 transition hover:text-flame-400"
+              >
+                <LogOut aria-hidden="true" className="size-5" /> Log out
+              </button>
+            </>
+          ) : (
+            <ButtonLink
+              href="/login"
+              variant="secondary"
+              size="lg"
+              onClick={close}
+              icon={<UserRound aria-hidden="true" className="size-5" />}
+              className="w-full text-cream-50"
+            >
+              Log in
+            </ButtonLink>
+          )}
           <p className="pt-2 text-center text-sm text-sand-300">{hours}</p>
         </div>
       </div>

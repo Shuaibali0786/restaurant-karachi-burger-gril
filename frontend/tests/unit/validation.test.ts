@@ -63,6 +63,15 @@ describe("other forms", () => {
     expect(signupSchema.safeParse(base).success).toBe(true);
     expect(signupSchema.safeParse({ ...base, confirmPassword: "different1" }).error?.issues[0]?.path).toEqual(["confirmPassword"]);
   });
+
+  it("signup needs an email or a mobile number, and each must be valid if given", () => {
+    const base = { name: "Sana", email: "", phone: "", password: "fire-wings-8", confirmPassword: "fire-wings-8" };
+    expect(signupSchema.safeParse(base).success).toBe(false);
+    expect(signupSchema.safeParse({ ...base, email: "sana@example.com" }).success).toBe(true);
+    expect(signupSchema.safeParse({ ...base, phone: "0321-1234567" }).success).toBe(true);
+    expect(signupSchema.safeParse({ ...base, email: "nope" }).success).toBe(false);
+    expect(signupSchema.safeParse({ ...base, phone: "12345" }).success).toBe(false);
+  });
 });
 
 describe("login", () => {

@@ -2,12 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useId, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
-import { Info, Loader2, PartyPopper, UtensilsCrossed } from "lucide-react";
+import { CircleAlert, Loader2 } from "lucide-react";
 import { login, signup } from "@/lib/api";
+import { ApiError } from "@/lib/api-error";
 import { loginSchema, signupSchema } from "@/lib/validation";
-import { buttonClasses, ButtonLink } from "@/components/ui/Button";
+import { useSession } from "@/stores/session";
+import { buttonClasses } from "@/components/ui/Button";
 import { describedBy, Field, inputClass } from "@/components/forms/Field";
 import { PasswordInput } from "@/components/forms/PasswordInput";
 
@@ -32,25 +35,32 @@ const loginFields: FieldSpec[] = [
 
 const signupFields: FieldSpec[] = [
   { name: "name", label: "Full name", autoComplete: "name" },
-  { name: "email", label: "Email", type: "email", autoComplete: "email", placeholder: "you@example.com" },
+  { name: "email", label: "Email", type: "email", autoComplete: "email", placeholder: "you@example.com", hint: "Email or mobile number — at least one" },
   { name: "phone", label: "Mobile number", type: "tel", autoComplete: "tel-national", placeholder: "03XX-XXXXXXX" },
   { name: "password", label: "Password", type: "password", autoComplete: "new-password", hint: "At least 8 characters" },
   { name: "confirmPassword", label: "Confirm password", type: "password", autoComplete: "new-password" },
 ];
 
-/**
- * Login / signup, UI only (Constitution IX): validates like the real thing,
- * then explains that accounts go live with the backend. Nothing is stored.
- */
+/** Only same-site paths, so a crafted `?from=` can never bounce someone to another website. */
+function safeDestination(from: string | null): string {
+  return from && from.startsWith("/") && !from.startsWith("//") && !from.startsWith("/admin") ? from : "/account/orders";
+}
+
+/** Customer login and signup (email or mobile number plus password). Sets the session and goes on to
+ * where the visitor came from, or "My orders". */
 export function AuthForm({ mode }: { mode: Mode }) {
   const uid = useId();
-  const [done, setDone] = useState(false);
+  const router = useRouter();
+  const from = useSearchParams().get("from");
+  const setUser = useSession((state) => state.setUser);
+  const [formError, setFormError] = useState<string | null>(null);
   const isLogin = mode === "login";
   const fields = isLogin ? loginFields : signupFields;
 
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<AuthValues>({
     // The two schemas have different field sets; both validate flat string records.
@@ -60,36 +70,29 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   const onSubmit = async (values: AuthValues) => {
     const value = (key: string) => values[key] ?? "";
-    if (isLogin) await login({ identifier: value("identifier"), password: value("password") });
-    else await signup({ name: value("name"), email: value("email"), phone: value("phone"), password: value("password") });
-    setDone(true);
+    setFormError(null);
+    try {
+      const user = isLogin
+        ? await login({ identifier: value("identifier"), password: value("password") })
+        : await signup({ name: value("name"), email: value("email"), phone: value("phone"), password: value("password") });
+      setUser(user);
+      router.replace(safeDestination(from));
+    } catch (error) {
+      if (!(error instanceof ApiError)) {
+        setFormError("Something went wrong. Please try again.");
+        return;
+      }
+      if (error.code === "VALIDATION_FAILED" && error.fields) {
+        for (const [field, message] of Object.entries(error.fields)) {
+          if (field === "email" || field === "phone") setError(field, { message });
+        }
+      }
+      setFormError(error.message);
+    }
   };
-
-  if (done) {
-    return (
-      <div role="status" className="text-center">
-        <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-flame-400 text-charcoal-950">
-          <PartyPopper aria-hidden="true" className="size-8" />
-        </span>
-        <h2 className="font-display mt-4 text-3xl font-black text-ink-900">Accounts are coming soon</h2>
-        <p className="mt-2 text-ink-600">
-          {isLogin ? "Sign-in" : "Sign-up"} goes live with our ordering backend. Until then you can order as a guest — it
-          only takes a minute.
-        </p>
-        <ButtonLink href="/menu" size="lg" className="mt-6" icon={<UtensilsCrossed aria-hidden="true" className="size-5" />}>
-          Browse menu
-        </ButtonLink>
-      </div>
-    );
-  }
 
   return (
     <>
-      <p className="mb-6 flex gap-2 rounded-xl bg-cream-100 p-3 text-sm text-ink-900 ring-1 ring-cream-200">
-        <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ember-700" />
-        Accounts go live with our ordering backend soon. You can already order as a guest.
-      </p>
-
       <button
         type="button"
         disabled
@@ -104,6 +107,12 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+        {formError && (
+          <p role="alert" className="flex items-start gap-2 rounded-xl bg-ember-500/10 p-4 font-semibold text-ember-700 ring-1 ring-ember-500/30">
+            <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0" />
+            {formError}
+          </p>
+        )}
         {fields.map((field) => {
           const id = `${uid}-${field.name}`;
           const error = errors[field.name]?.message;
@@ -128,7 +137,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
         {isLogin && (
           <p className="text-right text-sm">
-            <span className="font-semibold text-ink-600">Forgot password? Available when accounts launch.</span>
+            <span className="font-semibold text-ink-600">Forgot your password? Contact us and we&apos;ll help.</span>
           </p>
         )}
 

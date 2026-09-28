@@ -7,10 +7,11 @@ import { useForm, useWatch } from "react-hook-form";
 import { Banknote, CalendarClock, ChevronDown, CircleAlert, CreditCard, Smartphone, Zap } from "lucide-react";
 import type { CartLine, DeliveryAreaOption, MenuItemView, Order } from "@/lib/types";
 import { ApiError } from "@/lib/api-error";
-import { placeOrder } from "@/lib/api";
+import { getMyOrders, placeOrder } from "@/lib/api";
 import { formatPktTime, isOpenNow, scheduleSlots } from "@/lib/time";
 import { checkoutSchema, pkMobile, type CheckoutFormInput, type CheckoutFormValues } from "@/lib/validation";
 import { useNow } from "@/hooks/useNow";
+import { useSession } from "@/stores/session";
 import { ChoiceCard } from "@/components/forms/ChoiceCard";
 import { describedBy, Field, FormSection, inputClass } from "@/components/forms/Field";
 
@@ -68,6 +69,7 @@ export function CheckoutForm({ areas, items, lines, onPlaced, onSubmittingChange
     register,
     handleSubmit,
     setValue,
+    getValues,
     setError,
     control,
     formState: { errors, isSubmitted },
@@ -85,6 +87,30 @@ export function CheckoutForm({ areas, items, lines, onPlaced, onSubmittingChange
       payment: "cod",
     },
   });
+
+  // Signed in: start from the saved name and phone, and from the last order's address. Fields the
+  // customer has already typed in are never overwritten, and everything stays editable. Guests
+  // (no session) see the empty form exactly as before.
+  const user = useSession((state) => state.user);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    if (!getValues("name")) setValue("name", user.name);
+    if (!getValues("phone") && user.phone) setValue("phone", user.phone);
+    getMyOrders()
+      .then((orders) => {
+        const last = orders[0];
+        if (!last || cancelled) return;
+        if (!getValues("phone")) setValue("phone", last.customer.phone);
+        if (!getValues("address") && last.delivery.address) setValue("address", last.delivery.address);
+        if (!getValues("landmark") && last.delivery.landmark) setValue("landmark", last.delivery.landmark);
+        if (!getValues("area") && areas.some((area) => area.id === last.delivery.area)) setValue("area", last.delivery.area);
+      })
+      .catch(() => undefined); // pre-filling is a convenience; never block checkout on it
+    return () => {
+      cancelled = true;
+    };
+  }, [user, areas, getValues, setValue]);
 
   const deliveryTime = useWatch({ control, name: "deliveryTime" });
   const areaId = useWatch({ control, name: "area" });

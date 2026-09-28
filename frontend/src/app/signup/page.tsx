@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { AuthForm } from "@/components/forms/AuthForm";
 import { AuthLayout } from "@/components/forms/AuthLayout";
 
@@ -11,7 +12,9 @@ export const metadata: Metadata = {
 export default function SignupPage() {
   return (
     <AuthLayout title="Create account" subtitle="Join us for faster checkout and one-tap reorders." image="/images/fried-chicken.jpg">
-      <AuthForm mode="signup" />
+      <Suspense>
+        <AuthForm mode="signup" />
+      </Suspense>
     </AuthLayout>
   );
 }

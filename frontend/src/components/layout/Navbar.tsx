@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useId, useState } from "react";
-import { Heart, Menu, Search, UserRound } from "lucide-react";
+import { useCallback, useEffect, useId, useState } from "react";
+import { Heart, LogOut, Menu, Search, ShieldCheck, UserRound } from "lucide-react";
 import type { NavLink } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { useScrolled } from "@/hooks/useScrolled";
+import { useSession } from "@/stores/session";
 import { ButtonLink } from "@/components/ui/Button";
 import { CartButton } from "@/components/cart/CartButton";
 import { Logo } from "@/components/layout/Logo";
@@ -27,6 +28,13 @@ export function Navbar({ links, hours }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const menuId = useId();
+  // The one place the session is loaded for the customer site (the server cookie is the truth).
+  const user = useSession((state) => state.user);
+  const loadSession = useSession((state) => state.load);
+  const logout = useSession((state) => state.logout);
+  useEffect(() => {
+    void loadSession().catch(() => undefined);
+  }, [loadSession]);
 
   const isHome = pathname === "/";
   const solid = scrolled || !isHome;
@@ -91,9 +99,25 @@ export function Navbar({ links, hours }: NavbarProps) {
             <Heart aria-hidden="true" className="size-5" />
           </Link>
 
-          <Link href="/login" aria-label="Log in" className={cn(iconButton, "hidden sm:flex")}>
-            <UserRound aria-hidden="true" className="size-5" />
-          </Link>
+          {user ? (
+            <>
+              {user.role === "admin" && (
+                <Link href="/admin" aria-label="Admin" className={cn(iconButton, "hidden sm:flex")}>
+                  <ShieldCheck aria-hidden="true" className="size-5" />
+                </Link>
+              )}
+              <Link href="/account/orders" aria-label="My orders" className={cn(iconButton, "hidden sm:flex")}>
+                <UserRound aria-hidden="true" className="size-5" />
+              </Link>
+              <button type="button" onClick={() => void logout()} aria-label="Log out" className={cn(iconButton, "hidden sm:flex")}>
+                <LogOut aria-hidden="true" className="size-5" />
+              </button>
+            </>
+          ) : (
+            <Link href="/login" aria-label="Log in" className={cn(iconButton, "hidden sm:flex")}>
+              <UserRound aria-hidden="true" className="size-5" />
+            </Link>
+          )}
 
           <CartButton />
 

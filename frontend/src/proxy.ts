@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
- * Optimistic redirect for the admin panel (ADR-0002): a visitor with no session cookie is sent
+ * Optimistic redirect for the admin panel and customer account pages (ADR-0002): a visitor with no session cookie is sent
  * straight to the login page instead of flashing a protected screen. This is a UX shortcut only —
  * every admin API route re-checks the session and role itself, since Proxy cannot see whether the
  * cookie's JWT is still valid or who it actually belongs to.
@@ -13,7 +13,8 @@ export function proxy(request: NextRequest) {
 
   const hasSession = request.cookies.has("kbg_session");
   if (!hasSession) {
-    const url = new URL("/admin/login", request.url);
+    // Account pages send customers to the customer login; the admin panel has its own.
+    const url = new URL(pathname.startsWith("/account") ? "/login" : "/admin/login", request.url);
     url.searchParams.set("from", pathname);
     return NextResponse.redirect(url);
   }
@@ -21,5 +22,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/account/:path*"],
 };

@@ -69,7 +69,7 @@ const faqs: { question: string; answer: ReactNode }[] = [
   },
   {
     question: "Do I need an account?",
-    answer: "No — you can order as a guest. Accounts with saved addresses and one-tap reorders are coming soon.",
+    answer: "No — you can order as a guest. An account (email or mobile number plus a password) lets you see your past orders, order again in one tap and skips retyping your name and address.",
   },
 ];
 
