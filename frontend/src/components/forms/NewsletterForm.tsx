@@ -7,7 +7,7 @@ import { CircleAlert, Loader2, PartyPopper, Send } from "lucide-react";
 // libraries and loads the API only when someone actually subscribes.
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/** Footer "Get deals first" signup (UI only this phase — nothing is sent). */
+/** Footer "Get deals first" signup; the email is saved once, however many times it is entered. */
 export function NewsletterForm() {
   const uid = useId();
   const [email, setEmail] = useState("");
@@ -23,9 +23,14 @@ export function NewsletterForm() {
     }
     setError(null);
     setStatus("sending");
-    const { subscribeNewsletter } = await import("@/lib/api");
-    await subscribeNewsletter(value);
-    setStatus("done");
+    try {
+      const { subscribeNewsletter } = await import("@/lib/api");
+      await subscribeNewsletter(value);
+      setStatus("done");
+    } catch (failure) {
+      setStatus("idle");
+      setError(failure instanceof Error && failure.name === "ApiError" ? failure.message : "Could not sign you up. Please try again.");
+    }
   };
 
   if (status === "done") {

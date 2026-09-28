@@ -1,8 +1,8 @@
 /**
  * The single data entry point for screens and components (Constitution IX).
  * Menu, ordering and tracking (this file's `get*`/`placeOrder` functions) now call the FastAPI
- * backend through `lib/http.ts`; accounts and reviews still use mock data until their own phases
- * land. See specs/002-restaurant-backend/contracts/frontend-api.md.
+ * backend through `lib/http.ts`; only testimonials still use mock data until reviews land.
+ * See specs/002-restaurant-backend/contracts/frontend-api.md.
  */
 import { site } from "@/lib/data/site";
 import { testimonials } from "@/lib/data/testimonials";
@@ -15,10 +15,12 @@ import type {
   AdminOrderSummary,
   CartLine,
   Category,
+  ContactMessage,
   DeliveryAreaOption,
   FeaturedPlacement,
   MenuItemView,
   MenuQuery,
+  NewsletterSubscriber,
   Order,
   OrderStatus,
   PlaceOrderInput,
@@ -77,11 +79,6 @@ export async function getTestimonials(): Promise<Testimonial[]> {
 export async function getDeliveryAreas(): Promise<DeliveryAreaOption[]> {
   return request<DeliveryAreaOption[]>("/delivery-areas", { cacheable: true });
 }
-
-/** Short, realistic pause so the loading state is visible (browser only). Login/signup/contact/newsletter are still UI-only mocks. */
-const MOCK_LATENCY_MS = 700;
-const pause = () =>
-  typeof window === "undefined" ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, MOCK_LATENCY_MS));
 
 /**
  * Places a Cash-on-Delivery order. The server re-prices every line from the menu and today's
@@ -162,14 +159,15 @@ export async function reorder(id: string): Promise<ReorderResult> {
   return request<ReorderResult>(`/me/orders/${encodeURIComponent(id)}/reorder`, { method: "POST" });
 }
 
-export async function sendContactMessage(_input: { name: string; phone: string; email: string; message: string }): Promise<{ status: "received" }> {
-  await pause();
-  return { status: "received" };
+export async function sendContactMessage(input: { name: string; phone: string; email: string; message: string }): Promise<{ status: "received" }> {
+  return request<{ status: "received" }>("/contact-messages", {
+    method: "POST",
+    body: { name: input.name, phone: input.phone || undefined, email: input.email || undefined, message: input.message },
+  });
 }
 
-export async function subscribeNewsletter(_email: string): Promise<{ status: "subscribed" }> {
-  await pause();
-  return { status: "subscribed" };
+export async function subscribeNewsletter(email: string): Promise<{ status: "subscribed" }> {
+  return request<{ status: "subscribed" }>("/newsletter-subscriptions", { method: "POST", body: { email } });
 }
 
 /* ------------------------------------------------------------------ admin */
@@ -230,4 +228,16 @@ export async function getAdminAreas(): Promise<AdminArea[]> {
 
 export async function updateArea(id: string, patch: Partial<{ fee: number; enabled: boolean }>): Promise<AdminArea> {
   return request<AdminArea>(`/admin/delivery-areas/${encodeURIComponent(id)}`, { method: "PATCH", body: patch });
+}
+
+export async function getContactMessages(params: { unread?: boolean } = {}): Promise<ContactMessage[]> {
+  return request<ContactMessage[]>("/admin/contact-messages", { query: { unread: params.unread ? "true" : undefined } });
+}
+
+export async function markMessageRead(id: number, isRead: boolean): Promise<ContactMessage> {
+  return request<ContactMessage>(`/admin/contact-messages/${id}`, { method: "PATCH", body: { isRead } });
+}
+
+export async function getNewsletterSubscribers(): Promise<NewsletterSubscriber[]> {
+  return request<NewsletterSubscriber[]>("/admin/newsletter-subscribers");
 }

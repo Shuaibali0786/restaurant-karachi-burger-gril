@@ -3,14 +3,17 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
-import { Flame, LogOut, MapPin, ReceiptText, UtensilsCrossed } from "lucide-react";
+import { Flame, LogOut, MailOpen, MapPin, ReceiptText, UtensilsCrossed } from "lucide-react";
+import { getContactMessages } from "@/lib/api";
 import { cn } from "@/lib/cn";
+import { usePolling } from "@/hooks/usePolling";
 import { useSession } from "@/stores/session";
 
 const links = [
   { href: "/admin", label: "Orders", Icon: ReceiptText },
   { href: "/admin/menu", label: "Menu", Icon: UtensilsCrossed },
   { href: "/admin/areas", label: "Areas", Icon: MapPin },
+  { href: "/admin/messages", label: "Messages", Icon: MailOpen },
 ];
 
 /**
@@ -29,6 +32,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Unread count on the Messages tab, refreshed once a minute.
+  const isAdmin = user?.role === "admin";
+  const { data: unread } = usePolling({
+    fetcher: () => getContactMessages({ unread: true }),
+    intervalMs: 60_000,
+    enabled: isAdmin,
+  });
+  const unreadCount = unread?.length ?? 0;
 
   useEffect(() => {
     if (user !== undefined && (user === null || user.role !== "admin")) {
@@ -68,6 +80,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 >
                   <Icon aria-hidden="true" className="size-4" />
                   {label}
+                  {href === "/admin/messages" && unreadCount > 0 && (
+                    <span className="rounded-full bg-flame-400 px-1.5 text-xs font-black text-charcoal-950">
+                      <span className="sr-only">{unreadCount} unread</span>
+                      <span aria-hidden="true">{unreadCount}</span>
+                    </span>
+                  )}
                 </Link>
               );
             })}

@@ -290,3 +290,8 @@ export interface SiteInfo {
   };
   socials: SocialLink[];
 }
+
+export interface NewsletterSubscriber {
+  email: string;
+  createdAt: string;
+}
