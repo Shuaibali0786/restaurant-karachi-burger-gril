@@ -2,11 +2,14 @@
 taken at order time (data-model.md), so changing `menu_item.base_price` here has no effect on any
 order already placed."""
 
+import re
+
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from app.core.errors import AppError
-from app.models import DeliveryArea, MenuItem
-from app.schemas.admin_catalog import AdminAreaOut, AdminMenuItemOut, AreaPatch, MenuItemPatch
+from app.models import DeliveryArea, MenuItem, Order
+from app.schemas.admin_catalog import AdminAreaOut, AdminMenuItemOut, AreaCreate, AreaPatch, MenuItemPatch
 
 
 def _out(item: MenuItem) -> AdminMenuItemOut:
@@ -62,3 +65,48 @@ def patch_area(session: Session, area_id: str, patch: AreaPatch) -> AdminAreaOut
     session.commit()
     session.refresh(area)
     return _area_out(area)
+
+
+def _slug(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
+def create_area(session: Session, data: AreaCreate) -> AdminAreaOut:
+    """A new area starts enabled, at the end of the list. Its id is the kebab-case name and never
+    changes afterwards (orders keep pointing at it)."""
+    name = data.name.strip()
+    area_id = _slug(name)
+    if not area_id:
+        raise AppError("VALIDATION_FAILED", "Please check the area name.", fields={"name": "Use letters or numbers."})
+    areas = session.exec(select(DeliveryArea)).all()
+    if any(a.id == area_id or a.name.lower() == name.lower() for a in areas):
+        raise AppError(
+            "CONFLICT", "There is already a delivery area with that name.", fields={"name": "Already exists."}
+        )
+    area = DeliveryArea(
+        id=area_id,
+        name=name,
+        fee=data.fee,
+        is_enabled=True,
+        sort_order=max((a.sort_order for a in areas), default=0) + 1,
+    )
+    session.add(area)
+    session.commit()
+    session.refresh(area)
+    return _area_out(area)
+
+
+def delete_area(session: Session, area_id: str) -> None:
+    """Removes an area nobody has ordered to. One with past orders is kept (orders point at it) and
+    staff are told to turn it off instead, which hides it from checkout just the same."""
+    area = session.get(DeliveryArea, area_id)
+    if area is None:
+        raise AppError("NOT_FOUND", "We couldn't find that delivery area.")
+    used = session.exec(select(func.count()).select_from(Order).where(Order.area_id == area_id)).one()
+    if used:
+        raise AppError(
+            "CONFLICT",
+            "This area has past orders, so it can't be removed. Turn it off instead to hide it from checkout.",
+        )
+    session.delete(area)
+    session.commit()

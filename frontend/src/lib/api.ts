@@ -241,3 +241,11 @@ export async function markMessageRead(id: number, isRead: boolean): Promise<Cont
 export async function getNewsletterSubscribers(): Promise<NewsletterSubscriber[]> {
   return request<NewsletterSubscriber[]>("/admin/newsletter-subscribers");
 }
+
+export async function createArea(input: { name: string; fee: number }): Promise<AdminArea> {
+  return request<AdminArea>("/admin/delivery-areas", { method: "POST", body: input });
+}
+
+export async function deleteArea(id: string): Promise<void> {
+  await request<void>(`/admin/delivery-areas/${encodeURIComponent(id)}`, { method: "DELETE" });
+}

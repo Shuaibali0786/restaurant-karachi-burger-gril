@@ -13,6 +13,7 @@ export type ApiErrorCode =
   | "INVALID_CREDENTIALS"
   | "FORBIDDEN"
   | "ACCOUNT_EXISTS"
+  | "CONFLICT"
   | "NOT_FOUND"
   | "INVALID_TRANSITION"
   | "REVIEW_NOT_ALLOWED"

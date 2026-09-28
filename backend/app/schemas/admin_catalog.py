@@ -47,3 +47,8 @@ class AreaPatch(CamelRequest):
         if self.fee is None and self.enabled is None:
             raise ValueError("Provide at least one of fee or enabled.")
         return self
+
+
+class AreaCreate(CamelRequest):
+    name: str = Field(min_length=2, max_length=40)
+    fee: int = Field(ge=0, le=2_000)
