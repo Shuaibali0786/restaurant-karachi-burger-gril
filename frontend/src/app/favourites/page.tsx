@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { loadForPage } from "@/lib/server-data";
 import { getMenuItems, getPromos } from "@/lib/api";
 import { buildCardMap } from "@/components/menu/cardMap";
 import { PageHero } from "@/components/ui/PageHero";
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function FavouritesPage() {
-  const [items, promos] = await Promise.all([getMenuItems(), getPromos()]);
+  const [items, promos] = await loadForPage(() => Promise.all([getMenuItems(), getPromos()]));
 
   return (
     <>

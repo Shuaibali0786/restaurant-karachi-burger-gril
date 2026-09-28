@@ -140,7 +140,7 @@ start.
 
 | Symptom | Likely cause and fix |
 |---|---|
-| Vercel build fails while fetching the menu | The backend was asleep or unreachable, or `NEXT_PUBLIC_API_URL` was not set before the build. Open the Render address until it answers, then **Redeploy** |
+| Vercel build is slow (a few minutes) | The backend was asleep. The build waits for it to wake (up to three tries per request). If it never answers, the build still succeeds but the home, menu, cart, checkout, combos and favourites pages are then rendered on each visit instead of being pre-built. Fix `NEXT_PUBLIC_API_URL` if it was wrong and **Redeploy** once the backend answers |
 | Forms say "This request is not allowed" | `FRONTEND_URL` on Render does not match the address in the browser exactly (including `https://`, no trailing `/`) |
 | You sign in but are signed out on the next page | `COOKIE_SECURE` is `true` but the site is being opened over `http://`, or the browser is calling Render directly instead of `/api` on the Vercel address |
 | Render says "Deploy failed" at start | `DATABASE_URL_DIRECT` is missing or wrong, so the migration step stops. Check the log |

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { loadForPage } from "@/lib/server-data";
 import { getDeliveryAreas, getMenuItems } from "@/lib/api";
 import { CheckoutView } from "@/components/checkout/CheckoutView";
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutPage() {
-  const [items, areas] = await Promise.all([getMenuItems(), getDeliveryAreas()]);
+  const [items, areas] = await loadForPage(() => Promise.all([getMenuItems(), getDeliveryAreas()]));
 
   return (
     <div className="bg-cream-50">

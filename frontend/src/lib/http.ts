@@ -10,6 +10,14 @@ import { ApiError, type ApiErrorCode } from "@/lib/api-error";
 const TIMEOUT_MS = 10_000;
 const SERVER_REVALIDATE_SECONDS = 60;
 
+// While Next.js builds the site the backend may be asleep (a free Render service takes about a minute
+// to wake). So during the build only: wait longer and try a few times, and once the backend has
+// clearly not answered, stop waiting for it on every remaining page (see lib/server-data.ts).
+const BUILDING = process.env.NEXT_PHASE === "phase-production-build";
+const BUILD_TIMEOUT_MS = 25_000;
+const BUILD_ATTEMPTS = 3;
+let backendUnreachableDuringBuild = false;
+
 const NETWORK_MESSAGE = "We couldn't reach the kitchen. Check your connection and try again.";
 const INTERNAL_MESSAGE = "Something went wrong on our side. Please try again.";
 
@@ -69,7 +77,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
     credentials: "include",
-    signal: signal ?? AbortSignal.timeout(TIMEOUT_MS),
+    signal: signal ?? AbortSignal.timeout(isServer && BUILDING ? BUILD_TIMEOUT_MS : TIMEOUT_MS),
   };
   if (isServer && cacheable && method === "GET") {
     init.next = { revalidate: SERVER_REVALIDATE_SECONDS, tags: ["menu"] };
@@ -77,12 +85,25 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     init.cache = "no-store";
   }
 
-  let response: Response;
-  try {
-    response = await fetch(buildUrl(path, query), init);
-  } catch {
+  const buildRetries = isServer && BUILDING && method === "GET";
+  if (buildRetries && backendUnreachableDuringBuild) throw new ApiError("NETWORK", NETWORK_MESSAGE);
+
+  let response: Response | undefined;
+  for (let attempt = 1; attempt <= (buildRetries ? BUILD_ATTEMPTS : 1); attempt++) {
+    try {
+      // A fresh timeout for every attempt (an AbortSignal cannot be reused once it has fired).
+      response = await fetch(buildUrl(path, query), attempt === 1 ? init : { ...init, signal: AbortSignal.timeout(BUILD_TIMEOUT_MS) });
+    } catch {
+      response = undefined;
+    }
+    // A waking Render service answers with a 5xx before it is ready; only the build keeps trying.
+    if (response && !(buildRetries && response.status >= 500)) break;
+  }
+  if (!response) {
+    if (buildRetries) backendUnreachableDuringBuild = true;
     throw new ApiError("NETWORK", NETWORK_MESSAGE);
   }
+  if (buildRetries && response.status >= 500) backendUnreachableDuringBuild = true;
 
   if (!response.ok) throw await toApiError(response);
   if (response.status === 204) return undefined as T;

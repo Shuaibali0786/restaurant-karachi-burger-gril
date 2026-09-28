@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderOnDemandIfUnreachable } from "@/lib/server-data";
 import { Suspense } from "react";
 import { Bike, Clock3, ShieldCheck } from "lucide-react";
 import { getCategories, getMenuItems, getPromos } from "@/lib/api";
@@ -27,7 +28,8 @@ export default async function MenuPage() {
   let loadError = false;
   try {
     [items, categories, promos] = await Promise.all([getMenuItems({ sort: "popular" }), getCategories(), getPromos()]);
-  } catch {
+  } catch (error) {
+    await renderOnDemandIfUnreachable(error); // building with the API unreachable: render per request instead
     loadError = true;
   }
   // The first two cards are above the fold on phones: load their photos eagerly (LCP).

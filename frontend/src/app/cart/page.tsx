@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { loadForPage } from "@/lib/server-data";
 import { getMenuItems } from "@/lib/api";
 import { CartView } from "@/components/cart/CartView";
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CartPage() {
-  const items = await getMenuItems();
+  const items = await loadForPage(() => getMenuItems());
 
   return (
     <div className="bg-cream-50">

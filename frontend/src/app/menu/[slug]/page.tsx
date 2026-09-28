@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { loadForPage } from "@/lib/server-data";
 import { notFound } from "next/navigation";
 import { ChevronRight, PackageX } from "lucide-react";
 import { getCategories, getMenuItem, getMenuItems, getMenuSlugs, getPromos } from "@/lib/api";
@@ -22,7 +23,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: ItemPageProps): Promise<Metadata> {
-  const item = await getMenuItem((await params).slug);
+  const item = await loadForPage(async () => getMenuItem((await params).slug));
   if (!item) return {};
   const description = `${item.description} From ${formatRs(item.basePrice)} at Karachi Burger & Grill.`;
   return {
@@ -38,14 +39,16 @@ export async function generateMetadata({ params }: ItemPageProps): Promise<Metad
 
 export default async function ItemPage({ params }: ItemPageProps) {
   const { slug } = await params;
-  const item = await getMenuItem(slug);
+  const item = await loadForPage(() => getMenuItem(slug));
   if (!item) notFound();
 
-  const [categories, sameCategory, promos] = await Promise.all([
-    getCategories(),
-    item.available ? getMenuItems({ category: item.category }) : Promise.resolve([]),
-    getPromos(),
-  ]);
+  const [categories, sameCategory, promos] = await loadForPage(() =>
+    Promise.all([
+      getCategories(),
+      item.available ? getMenuItems({ category: item.category }) : Promise.resolve([]),
+      getPromos(),
+    ]),
+  );
   const category = categories.find((c) => c.id === item.category);
   const related = sameCategory.filter((other) => other.slug !== item.slug).slice(0, 4);
 

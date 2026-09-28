@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { loadForPage } from "@/lib/server-data";
 import { getCategories, getFeaturedItems, getMenuItems, getPromos, getTestimonials } from "@/lib/api";
 import { AboutTeaser } from "@/components/home/AboutTeaser";
 import { Categories } from "@/components/home/Categories";
@@ -41,14 +42,16 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [categories, featured, items, specials, promos, testimonials] = await Promise.all([
-    getCategories(),
-    getFeaturedItems("most-loved"),
-    getMenuItems({ sort: "popular" }),
-    getFeaturedItems("chef-special"),
-    getPromos(),
-    getTestimonials(),
-  ]);
+  const [categories, featured, items, specials, promos, testimonials] = await loadForPage(() =>
+    Promise.all([
+      getCategories(),
+      getFeaturedItems("most-loved"),
+      getMenuItems({ sort: "popular" }),
+      getFeaturedItems("chef-special"),
+      getPromos(),
+      getTestimonials(),
+    ]),
+  );
 
   // Most Loved tabs: "All" shows the 10 favourites; each category tab its top 3.
   const featuredSlugs = featured.slice(0, 10).map((item) => item.slug);

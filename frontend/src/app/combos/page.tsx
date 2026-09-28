@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { loadForPage } from "@/lib/server-data";
 import { notFound } from "next/navigation";
 import { Plus, Utensils } from "lucide-react";
 import { getCategories, getMenuItem, getMenuItems, getPromos } from "@/lib/api";
@@ -19,12 +20,9 @@ export const metadata: Metadata = {
 };
 
 export default async function CombosPage() {
-  const [combo, promos, items, categories] = await Promise.all([
-    getMenuItem("grand-combo"),
-    getPromos(),
-    getMenuItems({ sort: "popular" }),
-    getCategories(),
-  ]);
+  const [combo, promos, items, categories] = await loadForPage(() =>
+    Promise.all([getMenuItem("grand-combo"), getPromos(), getMenuItems({ sort: "popular" }), getCategories()]),
+  );
   if (!combo) notFound();
 
   // Categories whose items can be upgraded to a meal, with that upgrade's price.
