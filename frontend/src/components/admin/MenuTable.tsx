@@ -71,7 +71,7 @@ function Toggle({ label, active, tone, onToggle }: { label: string; active: bool
       onClick={onToggle}
       aria-pressed={active}
       className={cn(
-        "min-h-11 rounded-full px-3 text-xs font-bold whitespace-nowrap ring-1 transition",
+        "min-h-11 min-w-11 rounded-full px-3 text-xs font-bold whitespace-nowrap ring-1 transition",
         active
           ? tone === "warn"
             ? "bg-ember-700/10 text-ember-700 ring-ember-700/30"

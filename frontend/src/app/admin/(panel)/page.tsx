@@ -10,6 +10,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
+      <h1 className="sr-only">Orders dashboard</h1>
       <TodayStats summary={summary} />
       <OrdersBoard />
     </div>

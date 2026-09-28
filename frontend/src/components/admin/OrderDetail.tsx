@@ -19,43 +19,43 @@ export function OrderDetail({ order }: { order: Order }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-card bg-white p-4 shadow-card ring-1 ring-cream-200">
           <h2 className="mb-3 text-sm font-bold tracking-wide text-ink-600 uppercase">Customer</h2>
-          <dl className="space-y-2 text-sm">
+          <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
               <User aria-hidden="true" className="size-4 shrink-0 text-ember-700" />
-              <dd className="font-bold text-ink-900">{order.customer.name}</dd>
+              <p className="font-bold text-ink-900">{order.customer.name}</p>
             </div>
             <div className="flex items-center gap-2">
               <Phone aria-hidden="true" className="size-4 shrink-0 text-ember-700" />
-              <dd className="font-bold text-ink-900 tabular-nums">
+              <p className="font-bold text-ink-900 tabular-nums">
                 <a href={`tel:${order.customer.phone}`} className="underline-offset-2 hover:underline">
                   {order.customer.phone}
                 </a>
-              </dd>
+              </p>
             </div>
-          </dl>
+          </div>
         </div>
 
         <div className="rounded-card bg-white p-4 shadow-card ring-1 ring-cream-200">
           <h2 className="mb-3 text-sm font-bold tracking-wide text-ink-600 uppercase">Delivery</h2>
-          <dl className="space-y-2 text-sm">
+          <div className="space-y-2 text-sm">
             <div className="flex items-start gap-2">
               <MapPin aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ember-700" />
-              <dd className="font-bold text-ink-900">
+              <p className="font-bold text-ink-900">
                 {order.delivery.address ?? "—"}
                 {order.delivery.landmark && <span className="block font-semibold text-ink-600">Near {order.delivery.landmark}</span>}
                 <span className="block font-semibold text-ink-600">{order.delivery.areaName}</span>
-              </dd>
+              </p>
             </div>
             {order.delivery.notes && (
               <div className="flex items-start gap-2">
                 <StickyNote aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ember-700" />
-                <dd className="italic text-ink-600">“{order.delivery.notes}”</dd>
+                <p className="italic text-ink-600">“{order.delivery.notes}”</p>
               </div>
             )}
             <div className="text-ink-600">
               {order.timing.type === "asap" ? "As soon as possible" : `Scheduled for ${formatPktTime(new Date(order.timing.slot))}`}
             </div>
-          </dl>
+          </div>
         </div>
       </div>
 

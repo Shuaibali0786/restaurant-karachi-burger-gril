@@ -237,7 +237,7 @@ export function AreasTable() {
                 onClick={() => void toggle(area.id, !area.enabled)}
                 aria-pressed={area.enabled}
                 className={cn(
-                  "min-h-11 rounded-full px-3 text-xs font-bold whitespace-nowrap ring-1 transition",
+                  "min-h-11 min-w-11 rounded-full px-3 text-xs font-bold whitespace-nowrap ring-1 transition",
                   area.enabled
                     ? "bg-ember-500 text-charcoal-950 ring-ember-500"
                     : "bg-cream-100 text-ink-600 ring-cream-200",

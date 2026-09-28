@@ -63,7 +63,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="min-h-dvh bg-cream-100">
       <header className="sticky top-0 z-30 bg-charcoal-950 text-cream-50">
         <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <Link href="/admin" className="flex items-center gap-2 font-display text-lg font-black">
+          <Link href="/admin" className="flex min-h-11 min-w-11 items-center gap-2 font-display text-lg font-black">
             <Flame aria-hidden="true" className="size-5 text-flame-400" />
             <span className="hidden sm:inline">Karachi Burger &amp; Grill</span>
             <span className="text-flame-400">Admin</span>
@@ -104,7 +104,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
             onClick={() => {
               void logout().then(() => router.replace("/admin/login"));
             }}
-            className="flex min-h-11 items-center gap-1.5 rounded-full px-3 text-sm font-bold text-sand-300 transition hover:bg-charcoal-800 hover:text-cream-50"
+            aria-label="Sign out"
+            className="flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-bold text-sand-300 transition hover:bg-charcoal-800 hover:text-cream-50"
           >
             <LogOut aria-hidden="true" className="size-4" />
             <span className="hidden sm:inline">Sign out</span>

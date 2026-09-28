@@ -6,11 +6,13 @@ test("sign up, checkout pre-filled, My orders, Order again, log out and in", asy
   test.skip(info.project.name !== "desktop-1280", "account journey checked on one viewport (signup rate limit)");
   const email = `e2e-${Date.now()}@example.com`;
   const password = "fire-wings-8";
+  // A phone number can belong to only one account, so use a new one on every run.
+  const digits = String(Date.now()).slice(-7);
 
   await freshStart(page, "/signup");
   await page.getByLabel("Full name").fill("Sana Ahmed");
   await page.getByLabel("Email", { exact: true }).fill(email);
-  await page.getByLabel("Mobile number").fill("03211234567");
+  await page.getByLabel("Mobile number").fill(`0321${digits}`);
   await page.getByRole("textbox", { name: "Password", exact: true }).fill(password);
   await page.getByRole("textbox", { name: "Confirm password" }).fill(password);
   await page.getByRole("button", { name: "Create account" }).click();
@@ -26,7 +28,7 @@ test("sign up, checkout pre-filled, My orders, Order again, log out and in", asy
   await page.getByRole("button", { name: /^Open cart/ }).click();
   await page.locator("dialog[open]").getByRole("link", { name: /^Checkout/ }).click();
   await expect(page.getByLabel("Full name")).toHaveValue("Sana Ahmed");
-  await expect(page.getByLabel("Mobile number")).toHaveValue(/3211234567/);
+  await expect(page.getByLabel("Mobile number")).toHaveValue(new RegExp(`321${digits}`));
   await page.getByLabel("Delivery area").selectOption("clifton");
   await page.getByLabel("Full address").fill("House 12, Street 4, Block 5");
   await completeDeliveryTiming(page);
