@@ -96,6 +96,9 @@ export function CheckoutView({ items, areas }: CheckoutViewProps) {
             <>Place order · {formatRs(totals.total)}</>
           )}
         </button>
+        <p className="mt-3 rounded-full bg-ember-500/10 px-3 py-1.5 text-center text-xs font-semibold text-ember-700 ring-1 ring-ember-500/20">
+          Portfolio demo — orders are not actually delivered.
+        </p>
         <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink-600">
           <Lock aria-hidden="true" className="size-3.5" /> Cash on Delivery · pay when your food arrives
         </p>

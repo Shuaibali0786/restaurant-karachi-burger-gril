@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Mail, MessageCircle, Phone } from "lucide-react";
+import { Mail, MessageCircle } from "lucide-react";
 import { getSiteInfo } from "@/lib/api";
 import { PageHero } from "@/components/ui/PageHero";
 import { LocationCard } from "@/components/content/LocationCard";
@@ -8,13 +8,12 @@ import { ContactForm } from "@/components/forms/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: "Call, email or message Karachi Burger & Grill on Burns Road, Saddar, Karachi. Open daily 12 noon – 3 AM.",
+  description: "Email or message Karachi Burger & Grill on Burns Road, Saddar, Karachi. Open daily 12 noon – 3 AM.",
 };
 
 export default async function ContactPage() {
   const site = await getSiteInfo();
   const channels = [
-    { Icon: Phone, label: "Call us", value: site.phone, href: `tel:${site.phone.replace(/\s/g, "")}`, note: "Fastest for orders on the way" },
     { Icon: Mail, label: "Email", value: site.email, href: `mailto:${site.email}`, note: "Catering, events and feedback" },
     { Icon: MessageCircle, label: "Message form", value: "Reply within a day", href: "#message", note: "Use the form on this page" },
   ];
@@ -25,7 +24,7 @@ export default async function ContactPage() {
 
       <div className="bg-cream-50">
         <div className="container-page space-y-8 py-10 sm:py-14">
-          <ul className="grid gap-4 sm:grid-cols-3">
+          <ul className="grid gap-4 sm:grid-cols-2">
             {channels.map(({ Icon, label, value, href, note }) => (
               <li key={label}>
                 <a href={href} className="group flex h-full gap-4 rounded-card bg-white p-5 shadow-card ring-1 ring-cream-200 transition hover:ring-ember-500">

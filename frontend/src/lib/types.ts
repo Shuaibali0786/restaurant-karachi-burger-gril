@@ -269,19 +269,13 @@ export interface NavLink {
   href: string;
 }
 
-export interface SocialLink {
-  network: "instagram" | "facebook" | "tiktok" | "whatsapp";
-  label: string;
-  href: string;
-}
-
 export interface SiteInfo {
   name: string;
   tagline: string;
   announcement: string;
+  demoNotice: string;
   address: string;
   hours: string;
-  phone: string;
   email: string;
   story: string;
   nav: NavLink[];
@@ -289,7 +283,6 @@ export interface SiteInfo {
     quickLinks: NavLink[];
     support: NavLink[];
   };
-  socials: SocialLink[];
 }
 
 export interface NewsletterSubscriber {

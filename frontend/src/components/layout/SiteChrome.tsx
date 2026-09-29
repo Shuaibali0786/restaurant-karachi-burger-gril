@@ -23,7 +23,7 @@ export function SiteChrome({ site, children }: { site: SiteInfo; children: React
   return (
     <>
       <SkipLink />
-      <AnnouncementBar text={site.announcement} />
+      <AnnouncementBar text={site.announcement} demoNotice={site.demoNotice} />
       <Navbar links={site.nav} hours={site.hours} />
       <main id="main" tabIndex={-1} className="flex-1 focus:outline-none">
         {children}

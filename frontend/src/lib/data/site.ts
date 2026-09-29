@@ -2,16 +2,15 @@ import type { SiteInfo } from "@/lib/types";
 
 /**
  * Brand facts shown across the site.
- * LAUNCH BLOCKER: `phone`, `email` and social `href`s are owner placeholders
- * (spec Assumptions) — replace with real details before going live.
+ * Portfolio demo: no phone or social links are shown; `email` is a demo address.
  */
 export const site: SiteInfo = {
   name: "Karachi Burger & Grill",
   tagline: "Karachi ka asli zaiqa",
   announcement: "Free delivery on orders over Rs 1,500 · Open daily 12 noon – 3 AM",
+  demoNotice: "Portfolio demo — orders are not actually delivered.",
   address: "Burns Road, Saddar, Karachi",
   hours: "Open daily 12 noon – 3 AM",
-  phone: "+92 300 0000000",
   email: "hello@karachiburgergrill.pk",
   story:
     "Charcoal-grilled burgers, crispy fried chicken and Burns Road BBQ — made fresh, halal and served hot till 3 AM.",
@@ -38,10 +37,4 @@ export const site: SiteInfo = {
       { label: "Terms & Conditions", href: "/terms" },
     ],
   },
-  socials: [
-    { network: "instagram", label: "Instagram", href: "https://instagram.com/" },
-    { network: "facebook", label: "Facebook", href: "https://facebook.com/" },
-    { network: "tiktok", label: "TikTok", href: "https://tiktok.com/" },
-    { network: "whatsapp", label: "WhatsApp", href: "https://wa.me/" },
-  ],
 };

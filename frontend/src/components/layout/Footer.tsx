@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { Clock, Mail, MapPin, Phone } from "lucide-react";
+import { Clock, Mail, MapPin } from "lucide-react";
 import type { NavLink, SiteInfo } from "@/lib/types";
 import { Logo } from "@/components/layout/Logo";
-import { SocialIcons } from "@/components/layout/SocialIcons";
 import { NewsletterForm } from "@/components/forms/NewsletterForm";
 
 function LinkColumn({ title, links }: { title: string; links: NavLink[] }) {
@@ -26,7 +25,6 @@ export function Footer({ site }: { site: SiteInfo }) {
   const contacts = [
     { Icon: MapPin, text: site.address },
     { Icon: Clock, text: site.hours },
-    { Icon: Phone, text: site.phone, href: `tel:${site.phone.replace(/\s/g, "")}` },
     { Icon: Mail, text: site.email, href: `mailto:${site.email}` },
   ];
 
@@ -37,9 +35,6 @@ export function Footer({ site }: { site: SiteInfo }) {
           <Logo />
           <p className="font-script mt-4 text-2xl text-flame-400">{site.tagline}</p>
           <p className="mt-2 max-w-sm leading-relaxed">{site.story}</p>
-          <div className="mt-5">
-            <SocialIcons links={site.socials} />
-          </div>
         </div>
 
         <div className="lg:col-span-2">
@@ -77,7 +72,17 @@ export function Footer({ site }: { site: SiteInfo }) {
       <div className="border-t border-charcoal-800">
         <div className="container-page flex flex-col items-center justify-between gap-2 py-5 text-sm sm:flex-row">
           <p>© 2026 {site.name}. All rights reserved.</p>
-          <p className="font-script text-lg text-flame-400">Karachi ka asli zaiqa ♥</p>
+          <p>
+            Designed &amp; built by{" "}
+            <a
+              href="https://github.com/Shuaibali0786"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-cream-50 underline-offset-4 hover:text-flame-400 hover:underline"
+            >
+              Shuaib Ali
+            </a>
+          </p>
         </div>
       </div>
     </footer>
